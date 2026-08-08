@@ -1,0 +1,18 @@
+import express from 'express'
+import { env } from './config/env.js'
+import { errorHandler } from './middlewares/errorHandler.js'
+import { notFound } from './middlewares/notFound.js'
+import { requestContext } from './middlewares/requestContext.js'
+import { apiRouter } from './routes/index.js'
+import { corsPolicy, publicRateLimit, securityHeaders } from './security/httpSecurity.js'
+
+export const app = express()
+app.disable('x-powered-by')
+app.set('trust proxy', env.TRUST_PROXY)
+app.use(requestContext)
+app.use(securityHeaders)
+app.use(corsPolicy)
+app.use(express.json({ limit: '100kb', strict: true }))
+app.use('/api/v1', publicRateLimit, apiRouter)
+app.use(notFound)
+app.use(errorHandler)
