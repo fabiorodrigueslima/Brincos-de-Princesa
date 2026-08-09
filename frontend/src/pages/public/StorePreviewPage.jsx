@@ -56,7 +56,7 @@ export function StorePreviewPage() {
 
         {!catalog && !error && <div className="catalog-state" aria-live="polite"><span className="loader" />Carregando peças…</div>}
         {error && <div className="catalog-state catalog-error" role="status"><h2>O catálogo está temporariamente indisponível.</h2><p>{error}</p><p>Confirme se a API e o PostgreSQL estão configurados e tente novamente.</p></div>}
-        {catalog?.data.length === 0 && <div className="catalog-state"><h2>Nenhuma peça encontrada.</h2><p>Tente retirar algum filtro ou fazer uma nova busca.</p></div>}
+        {catalog?.data.length === 0 && <div className="catalog-state"><h2>{filters.q || filters.category ? 'Nenhuma peça encontrada.' : 'Nenhum produto disponível no momento.'}</h2><p>{filters.q || filters.category ? 'Tente retirar algum filtro ou fazer uma nova busca.' : 'Novas peças artesanais serão apresentadas aqui em breve.'}</p></div>}
         {catalog?.data.length > 0 && <>
           <div className="catalog-summary">{catalog.pagination.total} {catalog.pagination.total === 1 ? 'peça encontrada' : 'peças encontradas'}</div>
           <div className="product-grid">{catalog.data.map((product) => <ProductCard key={product.id} product={product} />)}</div>

@@ -1,6 +1,6 @@
 # Banco de dados
 
-O projeto usa PostgreSQL e a biblioteca `pg`, sem ORM. O schema é mantido manualmente em quatro arquivos:
+O projeto usa PostgreSQL e a biblioteca `pg`, sem ORM. O bootstrap histórico do schema permanece em quatro arquivos:
 
 1. `database/database.sql`: papéis de menor privilégio, banco, schema e configuração básica;
 2. `database/tables.sql`: tabelas, constraints, relacionamentos, triggers e grants;
@@ -8,6 +8,8 @@ O projeto usa PostgreSQL e a biblioteca `pg`, sem ORM. O schema é mantido manua
 4. `database/seed.sql`: categorias e configurações públicas, sem usuários ou segredos.
 
 `database/permissions.sql` reaplica de forma idempotente o menor privilégio em uma instalação existente.
+
+A partir da baseline aprovada, alterações evolutivas são controladas por `database/migrations/`, checksum SHA-256 e `app.schema_migrations`. Consulte `docs/DATABASE-MIGRATIONS.md`. Scripts históricos já aplicados e migrations registradas são imutáveis.
 
 ## Inicialização
 
@@ -56,4 +58,4 @@ O preparador recusa `NODE_ENV=production`, nomes sem o sufixo `_test`, o mesmo n
 
 ## Alterações futuras
 
-Após a primeira publicação, nunca edite retrospectivamente um script já aplicado. Crie migrações SQL numeradas e registre cada aplicação em uma tabela de controle a ser introduzida antes do primeiro deploy.
+Nunca edite retrospectivamente uma migration aplicada. Crie o próximo arquivo SQL numerado e execute `npm run db:migrate`; divergências de checksum são recusadas e cada migration nova é transacional.

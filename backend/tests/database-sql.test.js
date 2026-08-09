@@ -17,7 +17,9 @@ describe('manual PostgreSQL schema', () => {
       readSql('seed.sql'),
       readSql('permissions.sql'),
       readSql('verify.sql'),
-    ])).resolves.toHaveLength(6)
+      readSql('migrations/001_baseline.sql'),
+      readSql('seeds/development/001_catalog_demo.sql'),
+    ])).resolves.toHaveLength(8)
   })
 
   it('defines every mandatory table', async () => {
@@ -53,5 +55,16 @@ describe('manual PostgreSQL schema', () => {
     expect(tables).toContain('GRANT SELECT ON app.categorias, app.colecoes, app.produtos, app.produto_variantes, app.produto_imagens, app.produto_colecoes TO brinco_app;')
     expect(permissions).toContain('REVOKE ALL PRIVILEGES ON ALL TABLES IN SCHEMA app FROM brinco_app;')
     expect(permissions).toContain('REVOKE TEMPORARY ON DATABASE brinco_de_princesa FROM brinco_app;')
+  })
+
+  it('defines immutable migrations and an explicitly demonstrative seed', async () => {
+    const baseline = await readSql('migrations/001_baseline.sql')
+    const developmentSeed = await readSql('seeds/development/001_catalog_demo.sql')
+
+    expect(baseline).toContain("table_name <> 'schema_migrations'")
+    expect(baseline).not.toMatch(/DROP\s+(TABLE|SCHEMA|DATABASE)/i)
+    expect(developmentSeed).toContain('DADOS DE DESENVOLVIMENTO')
+    expect(developmentSeed).toContain('ON CONFLICT')
+    expect(developmentSeed).not.toMatch(/password|secret|token/i)
   })
 })

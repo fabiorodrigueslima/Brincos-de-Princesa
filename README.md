@@ -4,11 +4,11 @@ E-commerce institucional para peças artesanais e produtos em resina.
 
 ## Estado do projeto
 
-**Fase 4 — concluída.** O projeto possui catálogo PostgreSQL real, vitrine React, site institucional responsivo e API Node.js/Express. Consulte [`docs/PHASE-4.md`](docs/PHASE-4.md) para as evidências e limitações.
+**Fase de migrations e catálogo.** O projeto possui migrations SQL incrementais, seed de desenvolvimento idempotente, catálogo PostgreSQL real, vitrine React, produto com variantes/galeria/estoque base e API Node.js/Express. Consulte [`docs/DATABASE-MIGRATIONS.md`](docs/DATABASE-MIGRATIONS.md) e [`docs/CATALOG-PHASE.md`](docs/CATALOG-PHASE.md).
 
 ## Identidade visual
 
-A logo oficial foi preservada em `public/brand/brinco-de-princesa-logo.png`. Na implementação, ela será usada no cabeçalho, rodapé, favicon e metadados sociais, com versões otimizadas derivadas sem substituir o arquivo original.
+A logo oficial foi preservada em `frontend/public/brand/brinco-de-princesa-logo.png` e é usada no cabeçalho, rodapé, favicon e estados visuais do catálogo.
 
 ## Comandos
 
@@ -17,12 +17,13 @@ npm install
 npm run dev
 npm run dev:frontend
 npm run dev:backend
-npm run db:check --workspace backend
+npm run db:check
+npm run db:migrate
+npm run db:seed:dev
+npm test
 npm run check
 ```
 
 `npm run dev` inicia os dois serviços juntos. O frontend usa `http://localhost:5173` e a API usa `http://localhost:3000` por padrão. Os comandos separados continuam disponíveis para desenvolvimento e diagnóstico.
 
-## Próximo passo
-
-Fase 5: evoluir a experiência da loja e do produto, incluindo galeria completa, filtros avançados, paginação por URL e SEO estruturado do catálogo.
+`db:seed:dev` cria somente dados demonstrativos e é bloqueado em produção. Nenhum comando cria carrinho, checkout, pagamento, autenticação ou painel administrativo.

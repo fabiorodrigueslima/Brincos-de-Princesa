@@ -22,6 +22,7 @@ let catalogService
 let closeDatabase
 let productId
 let collectionId
+let archivedProductId
 
 describe('catalog with isolated PostgreSQL', () => {
   beforeAll(async () => {
@@ -64,6 +65,25 @@ describe('catalog with isolated PostgreSQL', () => {
     })
     productId = product.rows[0].id
 
+    const archivedProduct = await adminClient.query({
+      text: `INSERT INTO app.produtos (categoria_id, nome, slug, descricao, status)
+             VALUES ($1, $2, $3, $4, 'ARCHIVED')
+             RETURNING id`,
+      values: [
+        category.rows[0].id,
+        'Produto Arquivado de Teste',
+        `produto-arquivado-${fixtureId}`,
+        'Este item não pode aparecer no catálogo público.',
+      ],
+    })
+    archivedProductId = archivedProduct.rows[0].id
+
+    await adminClient.query({
+      text: `INSERT INTO app.produto_variantes (produto_id, sku, nome, preco, estoque)
+             VALUES ($1, $2, 'Oculta', 49.90, 4)`,
+      values: [archivedProductId, `TEST-ARCHIVED-${fixtureId}`],
+    })
+
     await adminClient.query({
       text: `INSERT INTO app.produto_variantes
                (produto_id, sku, nome, atributos, preco, preco_promocional, estoque)
@@ -97,6 +117,10 @@ describe('catalog with isolated PostgreSQL', () => {
           await adminClient.query('DELETE FROM app.produto_variantes WHERE produto_id = $1', [productId])
           await adminClient.query('DELETE FROM app.produtos WHERE id = $1', [productId])
         }
+        if (archivedProductId) {
+          await adminClient.query('DELETE FROM app.produto_variantes WHERE produto_id = $1', [archivedProductId])
+          await adminClient.query('DELETE FROM app.produtos WHERE id = $1', [archivedProductId])
+        }
         if (collectionId) await adminClient.query('DELETE FROM app.colecoes WHERE id = $1', [collectionId])
       } finally {
         await adminClient.end()
@@ -123,6 +147,28 @@ describe('catalog with isolated PostgreSQL', () => {
     const product = await catalogService.getProduct(productSlug)
     expect(product.variants).toHaveLength(2)
     expect(product.images[0].primary).toBe(true)
+    expect(product.variants[0]).toHaveProperty('availableStock')
     expect(product.collections[0].slug).toBe(collectionSlug)
+  })
+
+  it('lists active categories and collections with public product counts', async () => {
+    const categories = await catalogService.listCategories()
+    const collections = await catalogService.listCollections()
+
+    expect(categories.find((category) => category.slug === 'brincos')).toMatchObject({ productCount: 1 })
+    expect(collections.find((collection) => collection.slug === collectionSlug)).toMatchObject({ productCount: 1 })
+  })
+
+  it('does not expose archived products in listing or detail', async () => {
+    const archivedSlug = `produto-arquivado-${fixtureId}`
+    const list = await catalogService.listProducts({
+      q: 'Arquivado', sort: 'newest', page: 1, limit: 12,
+    })
+
+    expect(list.pagination.total).toBe(0)
+    await expect(catalogService.getProduct(archivedSlug)).rejects.toMatchObject({
+      status: 404,
+      code: 'PRODUCT_NOT_FOUND',
+    })
   })
 })

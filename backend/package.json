@@ -7,9 +7,11 @@
     "dev": "node --env-file-if-exists=.env --watch src/server.js",
     "start": "node --env-file-if-exists=.env src/server.js",
     "db:check": "node --env-file-if-exists=.env src/scripts/checkDatabase.js",
+    "db:migrate": "node --env-file-if-exists=.env src/scripts/runMigrations.js",
+    "db:seed:dev": "node --env-file-if-exists=.env src/scripts/runDevelopmentSeed.js",
     "lint": "eslint .",
     "test": "npm run test:unit && npm run test:postgres",
-    "test:unit": "vitest run --exclude tests/catalog-postgres.integration.test.js",
+    "test:unit": "vitest run --exclude tests/*-postgres.integration.test.js",
     "test:postgres": "node --env-file-if-exists=.env tests/run-postgres-integration.js"
   },
   "dependencies": {

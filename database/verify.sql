@@ -6,16 +6,21 @@ BEGIN;
 
 DO $$
 DECLARE
-  total_tabelas INTEGER;
+  total_tabelas_negocio INTEGER;
   produto_teste_id BIGINT;
 BEGIN
   SELECT count(*)
-    INTO total_tabelas
+    INTO total_tabelas_negocio
     FROM information_schema.tables
-   WHERE table_schema = 'app';
+   WHERE table_schema = 'app'
+     AND table_name <> 'schema_migrations';
 
-  IF total_tabelas <> 26 THEN
-    RAISE EXCEPTION 'Esperadas 26 tabelas no schema app; encontradas %', total_tabelas;
+  IF total_tabelas_negocio <> 26 THEN
+    RAISE EXCEPTION 'Esperadas 26 tabelas de negócio no schema app; encontradas %', total_tabelas_negocio;
+  END IF;
+
+  IF to_regclass('app.schema_migrations') IS NULL THEN
+    RAISE EXCEPTION 'A tabela de controle app.schema_migrations não foi encontrada';
   END IF;
 
   INSERT INTO produtos (nome, slug, descricao)

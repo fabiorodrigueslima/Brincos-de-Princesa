@@ -116,7 +116,14 @@ await prepareTestDatabase(runtimeUrl, maintenanceUrl, testAdminUrl)
 const vitestEntry = resolve(backendDirectory, '../node_modules/vitest/vitest.mjs')
 const result = spawnSync(
   process.execPath,
-  [vitestEntry, 'run', 'tests/catalog-postgres.integration.test.js'],
+  [
+    vitestEntry,
+    'run',
+    '--no-file-parallelism',
+    'tests/migrations-postgres.integration.test.js',
+    'tests/development-seed-postgres.integration.test.js',
+    'tests/catalog-postgres.integration.test.js',
+  ],
   {
     cwd: backendDirectory,
     env: {
