@@ -23,6 +23,7 @@ let closeDatabase
 let productId
 let collectionId
 let archivedProductId
+let saleVariantId
 
 describe('catalog with isolated PostgreSQL', () => {
   beforeAll(async () => {
@@ -92,6 +93,8 @@ describe('catalog with isolated PostgreSQL', () => {
                ($1, $3, 'Marfim', '{"cor":"marfim"}', 119.90, NULL, 0)`,
       values: [productId, `TEST-VINHO-${fixtureId}`, `TEST-MARFIM-${fixtureId}`],
     })
+    const saleVariant = await adminClient.query('SELECT id FROM app.produto_variantes WHERE sku = $1', [`TEST-VINHO-${fixtureId}`])
+    saleVariantId = Number(saleVariant.rows[0].id)
     await adminClient.query(
       `INSERT INTO app.produto_imagens (produto_id, url, alt_text, principal, ordem)
        VALUES ($1, '/images/hero-artesanal.webp', 'Brinco floral de teste', TRUE, 0)`,
@@ -170,5 +173,15 @@ describe('catalog with isolated PostgreSQL', () => {
       status: 404,
       code: 'PRODUCT_NOT_FOUND',
     })
+  })
+
+  it('revalidates changed price and ignores a forged browser price', async () => {
+    const { cartService } = await import('../src/services/cartService.js')
+    const before = await cartService.validate([{ variantId: saleVariantId, quantity: 2, price: 0.01 }])
+    expect(before.items[0]).toMatchObject({ unitPrice: '109.90', subtotal: '219.80', available: true })
+
+    await adminClient.query('UPDATE app.produto_variantes SET preco_promocional = 119.90 WHERE id = $1', [saleVariantId])
+    const after = await cartService.validate([{ variantId: saleVariantId, quantity: 2, price: 0.01 }])
+    expect(after.items[0]).toMatchObject({ unitPrice: '119.90', subtotal: '239.80', availableStock: 5 })
   })
 })

@@ -9,9 +9,11 @@ export class ApiError extends Error {
   }
 }
 
-async function request(path, { signal } = {}) {
+async function request(path, { signal, method = 'GET', body } = {}) {
   const response = await fetch(`${API_BASE_URL}${path}`, {
-    headers: { Accept: 'application/json' },
+    method,
+    headers: { Accept: 'application/json', ...(body ? { 'Content-Type': 'application/json' } : {}) },
+    body: body ? JSON.stringify(body) : undefined,
     signal,
   })
   const payload = await response.json().catch(() => null)
@@ -19,6 +21,10 @@ async function request(path, { signal } = {}) {
     throw new ApiError(payload?.error?.message ?? 'Não foi possível acessar o catálogo.', response.status, payload?.error?.code)
   }
   return payload
+}
+
+export function validateCart(items, signal) {
+  return request('/cart/validate', { signal, method: 'POST', body: { items } })
 }
 
 export function getCategories(signal) {

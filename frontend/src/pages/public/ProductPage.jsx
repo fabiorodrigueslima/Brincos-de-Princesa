@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { PageMeta } from '../../components/common/PageMeta.jsx'
 import { getProduct } from '../../services/api.js'
+import { useCart } from '../../context/cartContextValue.js'
 
 const currency = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
 
@@ -11,6 +12,9 @@ export function ProductPage() {
   const [error, setError] = useState('')
   const [selectedVariant, setSelectedVariant] = useState(null)
   const [selectedImageId, setSelectedImageId] = useState(null)
+  const [quantity, setQuantity] = useState(1)
+  const [cartMessage, setCartMessage] = useState('')
+  const { addItem } = useCart()
 
   useEffect(() => {
     const controller = new AbortController()
@@ -51,10 +55,15 @@ export function ProductPage() {
           {currentPrice && <p className="detail-price">{currency.format(Number(currentPrice))}</p>}
           <p className="detail-description">{product.description}</p>
           {product.variants.length > 0 && <fieldset className="variant-picker"><legend>Escolha a variação</legend>{product.variants.map((variant) => <button key={variant.id} type="button" className={selectedVariant?.id === variant.id ? 'selected' : ''} aria-pressed={selectedVariant?.id === variant.id} onClick={() => setSelectedVariant(variant)} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); setSelectedVariant(variant) } }}><span>{variant.name}</span><small>{variant.inStock ? `${variant.availableStock} ${variant.availableStock === 1 ? 'unidade disponível' : 'unidades disponíveis'}` : 'Esgotado'}</small></button>)}</fieldset>}
-          {selectedVariant && <p className={`stock-status ${selectedVariant.inStock ? 'in-stock' : 'out-of-stock'}`} role="status">{selectedVariant.inStock ? 'Disponível para demonstração' : 'Indisponível no momento'}</p>}
+          {selectedVariant && <p className={`stock-status ${selectedVariant.inStock ? 'in-stock' : 'out-of-stock'}`} role="status">{selectedVariant.inStock ? 'Disponível para adicionar ao carrinho' : 'Indisponível no momento'}</p>}
           <div className="product-facts">{product.materials && <div><strong>Materiais</strong><span>{product.materials}</span></div>}{product.dimensions && <div><strong>Medidas</strong><span>{product.dimensions}</span></div>}<div><strong>Produção</strong><span>{product.productionDays > 0 ? `Até ${product.productionDays} dias` : 'Pronta entrega quando disponível'}</span></div>{product.care && <div><strong>Cuidados</strong><span>{product.care}</span></div>}</div>
           {product.collections.length > 0 && <div className="product-collections"><strong>Coleção</strong>{product.collections.map((collection) => <span key={collection.slug}>{collection.name}</span>)}</div>}
-          <div className="purchase-note"><strong>Compra ainda não disponível</strong><p>A peça e a variação já vêm do estoque real. Carrinho e checkout pertencem a uma fase futura.</p><button type="button" disabled aria-disabled="true">Comprar em fase futura</button></div>
+          <div className="add-to-cart">
+            <div className="quantity-control" aria-label="Quantidade a adicionar"><button type="button" aria-label="Diminuir quantidade" disabled={quantity <= 1} onClick={() => setQuantity((value) => Math.max(1, value - 1))}>−</button><span aria-live="polite">{quantity}</span><button type="button" aria-label="Aumentar quantidade" disabled={!selectedVariant?.inStock || quantity >= Math.min(99, selectedVariant.availableStock)} onClick={() => setQuantity((value) => Math.min(99, selectedVariant.availableStock, value + 1))}>+</button></div>
+            <button className="button button-primary" type="button" disabled={!selectedVariant?.inStock} onClick={() => { addItem(selectedVariant.id, quantity); setCartMessage(`${quantity} ${quantity === 1 ? 'peça adicionada' : 'peças adicionadas'} ao carrinho.`) }}>Adicionar ao carrinho</button>
+            <p className="cart-feedback" role="status" aria-live="polite">{cartMessage}</p>
+            {cartMessage && <Link className="text-link" to="/carrinho">Ver carrinho</Link>}
+          </div>
         </div>
       </article>
     </>

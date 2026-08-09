@@ -10,6 +10,7 @@ import { PersonalizadosPage } from './pages/public/PersonalizadosPage.jsx'
 import { ProcessPage } from './pages/public/ProcessPage.jsx'
 import { ProductPage } from './pages/public/ProductPage.jsx'
 import { StorePreviewPage } from './pages/public/StorePreviewPage.jsx'
+import { CartPage } from './pages/public/CartPage.jsx'
 import './styles/global.css'
 
 export default function App() {
@@ -23,6 +24,7 @@ export default function App() {
           <Route path="colecoes" element={<CollectionsPage />} />
           <Route path="loja" element={<StorePreviewPage />} />
           <Route path="produto/:slug" element={<ProductPage />} />
+          <Route path="carrinho" element={<CartPage />} />
           <Route path="personalizados" element={<PersonalizadosPage />} />
           <Route path="como-e-feito" element={<ProcessPage />} />
           <Route path="contato" element={<ContactPage />} />

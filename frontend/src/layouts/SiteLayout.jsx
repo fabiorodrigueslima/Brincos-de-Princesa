@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, NavLink, Outlet } from 'react-router-dom'
 import { MenuIcon, ShoppingBagIcon, XIcon } from '../components/common/Icons.jsx'
 import { ScrollToTop } from '../components/common/ScrollToTop.jsx'
+import { useCart } from '../context/cartContextValue.js'
 
 const navigation = [
   ['/', 'Início'],
@@ -15,6 +16,8 @@ const navigation = [
 
 export function SiteLayout() {
   const [menuOpen, setMenuOpen] = useState(false)
+  const { getItemCount } = useCart()
+  const itemCount = getItemCount()
 
   return (
     <div className="site-shell">
@@ -44,9 +47,9 @@ export function SiteLayout() {
           ))}
         </nav>
 
-        <Link className="store-shortcut" to="/loja" aria-label="Conhecer a loja">
+        <Link className="store-shortcut" to="/carrinho" aria-label={`Carrinho com ${itemCount} ${itemCount === 1 ? 'item' : 'itens'}`}>
           <ShoppingBagIcon />
-          <span>Loja</span>
+          <span>Carrinho</span>{itemCount > 0 && <strong className="cart-badge" aria-hidden="true">{itemCount}</strong>}
         </Link>
       </header>
 
