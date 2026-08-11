@@ -17,7 +17,7 @@ export function ProcessPage() {
       <PageMeta title="Como é feito" description="Conheça o processo artesanal por trás das peças em resina da Brinco de Princesa." />
       <PageHero eyebrow="Processo artesanal" title="Mãos, matéria e tempo." text="Criar à mão é acompanhar cada transformação de perto. Conheça as etapas que fazem cada peça florescer." />
       <section className="process-story container">
-        <div className="process-sticky"><img src="/images/processo-artesanal.webp" alt="Artesã trabalhando cuidadosamente na montagem de um brinco" /><p>Imagem conceitual provisória — as fotos oficiais do ateliê serão incorporadas posteriormente.</p></div>
+        <div className="process-sticky"><img src="/images/processo-artesanal-novo.png" alt="Artesã trabalhando cuidadosamente na montagem de um brinco" width="1122" height="1402" /></div>
         <ol className="process-details">{steps.map(([number, title, text]) => <li key={number}><span>{number}</span><div><h2>{title}</h2><p>{text}</p></div></li>)}</ol>
       </section>
       <section className="care-banner"><div className="container narrow"><p className="eyebrow">Por que artesanal?</p><h2>Porque detalhes importantes não pedem pressa.</h2><p>O tempo manual permite olhar, ajustar e cuidar. Também significa que pequenas variações de cor, flor ou posição podem acontecer — elas são a assinatura da peça.</p><Link className="button button-light" to="/loja">Conhecer as criações <ArrowIcon /></Link></div></section>

@@ -22,7 +22,7 @@ export function HomePage() {
           <div className="hero-note"><span aria-hidden="true">✦</span> Pequenas tiragens, cuidado em cada etapa.</div>
         </div>
         <div className="hero-visual">
-          <img src="/images/hero-artesanal.webp" alt="Brincos artesanais de resina com pequenas flores vinho" width="1536" height="1024" fetchPriority="high" />
+          <img src="/images/brinco-floral-rosa.png" alt="Par de brincos artesanais de resina transparente com pequenas flores rosas" width="1536" height="1024" fetchPriority="high" />
           <span className="hero-seal">feito<br />à mão</span>
         </div>
       </section>
@@ -37,7 +37,7 @@ export function HomePage() {
         <SectionHeading eyebrow="Nossas inspirações" title="Coleções que guardam histórias" text="Formas, cores e flores se encontram em peças pensadas para acompanhar momentos especiais e dias comuns." />
         <div className="collection-grid">
           <article className="collection-card collection-card-large">
-            <img src="/images/pecas-personalizadas.webp" alt="Três pares de brincos florais artesanais" loading="lazy" />
+            <img src="/images/colecao-brincos-florais.png" alt="Coleção de brincos artesanais de resina com flores preservadas" loading="lazy" width="1254" height="1254" />
             <div><p className="eyebrow">Coleção</p><h3>Jardim Secreto</h3><p>Flores preservadas em composições únicas.</p><Link to="/colecoes">Descobrir coleção <ArrowIcon /></Link></div>
           </article>
           <article className="collection-card collection-card-wine"><div><p className="eyebrow">Essenciais</p><h3>Delicadeza diária</h3><p>Leves, versáteis e feitas para florescer com você.</p><Link to="/loja">Conhecer peças <ArrowIcon /></Link></div></article>
@@ -45,7 +45,7 @@ export function HomePage() {
       </section>
 
       <section className="story-feature">
-        <div className="story-image"><img src="/images/processo-artesanal.webp" alt="Mãos da artesã montando cuidadosamente um brinco floral" loading="lazy" /></div>
+        <div className="story-image"><img src="/images/processo-artesanal-novo.png" alt="Artesã montando cuidadosamente um brinco floral com pinça" loading="lazy" width="1122" height="1402" /></div>
         <div className="story-copy">
           <p className="eyebrow">Nossa essência</p>
           <h2>Um fazer que respeita o tempo das coisas bonitas.</h2>
@@ -66,7 +66,7 @@ export function HomePage() {
 
       <section className="personalized-feature container">
         <div><p className="eyebrow">Feito para você</p><h2>Uma lembrança, uma flor, uma história só sua.</h2><p>Peças personalizadas transformam referências afetivas em criações únicas, desenvolvidas com cuidado e conversa em cada etapa.</p><Link className="button button-primary" to="/personalizados">Quero uma peça personalizada</Link></div>
-        <img src="/images/pecas-personalizadas.webp" alt="Seleção de brincos florais personalizados em resina" loading="lazy" />
+        <img src="/images/brinco-folha-dourada.png" alt="Brincos artesanais dourados em formato de folha" loading="lazy" width="1145" height="1374" />
       </section>
 
       <section className="closing-cta">

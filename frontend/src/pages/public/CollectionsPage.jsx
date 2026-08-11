@@ -4,9 +4,9 @@ import { PageHero } from '../../components/common/PageHero.jsx'
 import { PageMeta } from '../../components/common/PageMeta.jsx'
 
 const collections = [
-  { name: 'Jardim Secreto', text: 'Flores preservadas e composições que parecem guardar um pequeno jardim.', position: 'center' },
-  { name: 'Entre Pétalas', text: 'Tons suaves, transparências e formas leves para o cotidiano.', position: 'bottom' },
-  { name: 'Vinho & Ouro', text: 'Contrastes marcantes para peças delicadas com presença.', position: 'top' },
+  { name: 'Jardim Secreto', text: 'Flores preservadas e composições que parecem guardar um pequeno jardim.', position: 'center', image: '/images/brinco-folha-clara.png', alt: 'Brincos artesanais claros com folhas naturais preservadas' },
+  { name: 'Entre Pétalas', text: 'Tons suaves, transparências e formas leves para o cotidiano.', position: 'bottom', image: '/images/brinco-folha-terracota.png', alt: 'Brincos redondos com folhas em tom terracota' },
+  { name: 'Vinho & Ouro', text: 'Contrastes marcantes para peças delicadas com presença.', position: 'top', image: '/images/brinco-folha-preta.png', alt: 'Brincos artesanais pretos com delicados ramos dourados' },
 ]
 
 export function CollectionsPage() {
@@ -16,7 +16,7 @@ export function CollectionsPage() {
       <PageHero eyebrow="Coleções" title="Pequenos universos para descobrir." text="Cada coleção parte de uma atmosfera, uma cor ou uma memória e ganha forma em séries de pequenas tiragens." />
       <section className="section container"><div className="editorial-grid">
         {collections.map((collection, index) => <article key={collection.name} className="editorial-card">
-          <img src={index === 1 ? '/images/hero-artesanal.webp' : '/images/pecas-personalizadas.webp'} alt="" style={{ objectPosition: collection.position }} />
+          <img src={collection.image} alt={collection.alt} loading="lazy" style={{ objectPosition: collection.position }} />
           <div><span>0{index + 1}</span><h2>{collection.name}</h2><p>{collection.text}</p><Link to="/loja">Ver na loja <ArrowIcon /></Link></div>
         </article>)}
       </div></section>

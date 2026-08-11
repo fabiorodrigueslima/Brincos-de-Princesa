@@ -9,7 +9,7 @@ export function AboutPage() {
       <PageMeta title="Nossa História" description="Conheça a essência artesanal da Brinco de Princesa e o cuidado por trás de cada criação." />
       <PageHero eyebrow="Nossa história" title="Beleza feita devagar, para durar na memória." text="A Brinco de Princesa nasce do encontro entre delicadeza, natureza e o prazer de criar com as próprias mãos." />
       <section className="split-section container">
-        <img src="/images/processo-artesanal.webp" alt="Artesã trabalhando em uma peça floral" />
+        <img src="/images/processo-artesanal-novo.png" alt="Artesã trabalhando em uma peça floral com uma pinça" loading="lazy" width="1122" height="1402" />
         <div><p className="eyebrow">A marca</p><h2>Cada detalhe carrega intenção.</h2><p>Mais do que acessórios, criamos pequenas expressões de identidade. As peças são produzidas artesanalmente, em pequenas quantidades, respeitando o tempo de cura, montagem e acabamento.</p><p>A resina encontra flores, cores e formas em composições que celebram a beleza do singular. Por isso, pequenas variações podem acontecer — e são parte daquilo que torna cada criação especial.</p></div>
       </section>
       <section className="section soft-section"><div className="container"><div className="principles-grid">

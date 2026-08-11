@@ -45,8 +45,8 @@ export function ProductPage() {
       <PageMeta title={product.seo.title || product.name} description={product.seo.description || product.description.slice(0, 160)} />
       <article className="product-detail container">
         <div className="product-gallery">
-          <div className="product-gallery-main">{primaryImage ? <img src={primaryImage.url} alt={primaryImage.alt} /> : <div className="product-image-placeholder"><img src="/brand/brinco-de-princesa-logo.png" alt="" /><span>Imagem em preparação</span></div>}</div>
-          {product.images.length > 1 && <div className="product-thumbnails" aria-label="Galeria do produto">{product.images.map((image, index) => <button key={image.id} type="button" className={primaryImage?.id === image.id ? 'selected' : ''} aria-label={`Ver imagem ${index + 1} de ${product.name}`} aria-pressed={primaryImage?.id === image.id} onClick={() => setSelectedImageId(image.id)}><img src={image.url} alt="" /></button>)}</div>}
+          <div className="product-gallery-main">{primaryImage ? <img src={primaryImage.url} alt={primaryImage.alt || product.name} width={primaryImage.width || undefined} height={primaryImage.height || undefined} /> : <div className="product-image-placeholder"><img src="/brand/brinco-de-princesa-logo.png" alt="" /><span>Imagem em preparação</span></div>}</div>
+          {product.images.length > 1 && <div className="product-thumbnails" aria-label="Galeria do produto">{product.images.map((image, index) => <button key={image.id} type="button" className={primaryImage?.id === image.id ? 'selected' : ''} aria-label={`Ver imagem ${index + 1} de ${product.name}`} aria-pressed={primaryImage?.id === image.id} onClick={() => setSelectedImageId(image.id)}><img src={image.url} alt="" loading="lazy" width={image.width || undefined} height={image.height || undefined} /></button>)}</div>}
         </div>
         <div className="product-info">
           {isDevelopmentData && <p className="development-label">Dados de desenvolvimento — não é uma oferta comercial</p>}

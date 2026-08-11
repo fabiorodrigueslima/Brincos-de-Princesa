@@ -10,7 +10,7 @@ export function PersonalizadosPage() {
       <PageHero eyebrow="Personalizados" title="Sua história transformada em peça." text="Cores, flores e referências afetivas podem inspirar uma criação desenvolvida especialmente para você." />
       <section className="split-section container personalized-intro">
         <div><p className="eyebrow">Criação em conversa</p><h2>Uma peça única começa com uma boa escuta.</h2><p>O processo personalizado considera o estilo desejado, a disponibilidade de materiais e o tempo artesanal necessário. Antes de produzir, alinhamos possibilidades, formato, paleta e prazo.</p><p>O serviço ainda está sendo preparado para atendimento online. Nenhum pedido ou pagamento é realizado por esta página neste momento.</p></div>
-        <img src="/images/pecas-personalizadas.webp" alt="Composição de brincos florais que inspira peças personalizadas" />
+        <img src="/images/colecao-brincos-florais.png" alt="Composição de brincos florais que inspira peças personalizadas" loading="lazy" width="1254" height="1254" />
       </section>
       <section className="section soft-section"><div className="container"><div className="custom-steps">
         <article><span>1</span><h3>Conte sua ideia</h3><p>Compartilhe referências, ocasião, cores e o que torna a peça especial.</p></article>

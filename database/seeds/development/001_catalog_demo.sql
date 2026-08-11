@@ -84,41 +84,55 @@ UPDATE produto_imagens
  WHERE produto_id = (SELECT id FROM produtos WHERE slug = 'brinco-floral-em-resina-demo');
 
 UPDATE produto_imagens
-   SET alt_text = 'Brinco floral em resina em ambiente artesanal — imagem demonstrativa',
-       mime_type = 'image/webp', largura_px = NULL, altura_px = NULL, ordem = 0, principal = TRUE
+   SET url = '/images/brinco-floral-rosa.png',
+       alt_text = 'Par de brincos artesanais de resina transparente com pequenas flores rosas',
+       mime_type = 'image/png', largura_px = 1536, altura_px = 1024, ordem = 0, principal = TRUE
  WHERE produto_id = (SELECT id FROM produtos WHERE slug = 'brinco-floral-em-resina-demo')
    AND url = '/images/hero-artesanal.webp';
 
+UPDATE produto_imagens
+   SET alt_text = 'Par de brincos artesanais de resina transparente com pequenas flores rosas',
+       mime_type = 'image/png', largura_px = 1536, altura_px = 1024, ordem = 0, principal = TRUE
+ WHERE produto_id = (SELECT id FROM produtos WHERE slug = 'brinco-floral-em-resina-demo')
+   AND url = '/images/brinco-floral-rosa.png';
+
 INSERT INTO produto_imagens (
   produto_id, url, alt_text, mime_type, ordem, principal
 )
-SELECT id, '/images/hero-artesanal.webp',
-       'Brinco floral em resina em ambiente artesanal — imagem demonstrativa',
-       'image/webp', 0, TRUE
+SELECT id, '/images/brinco-floral-rosa.png',
+       'Par de brincos artesanais de resina transparente com pequenas flores rosas',
+       'image/png', 0, TRUE
   FROM produtos
  WHERE slug = 'brinco-floral-em-resina-demo'
    AND NOT EXISTS (
      SELECT 1 FROM produto_imagens
-      WHERE produto_id = produtos.id AND url = '/images/hero-artesanal.webp'
+      WHERE produto_id = produtos.id AND url = '/images/brinco-floral-rosa.png'
    );
 
 UPDATE produto_imagens
-   SET alt_text = 'Detalhe do processo artesanal — imagem demonstrativa',
-       mime_type = 'image/webp', largura_px = NULL, altura_px = NULL, ordem = 1, principal = FALSE
+   SET url = '/images/colecao-brincos-florais.png',
+       alt_text = 'Coleção de brincos artesanais de resina com flores preservadas',
+       mime_type = 'image/png', largura_px = 1254, altura_px = 1254, ordem = 1, principal = FALSE
  WHERE produto_id = (SELECT id FROM produtos WHERE slug = 'brinco-floral-em-resina-demo')
    AND url = '/images/processo-artesanal.webp';
+
+UPDATE produto_imagens
+   SET alt_text = 'Coleção de brincos artesanais de resina com flores preservadas',
+       mime_type = 'image/png', largura_px = 1254, altura_px = 1254, ordem = 1, principal = FALSE
+ WHERE produto_id = (SELECT id FROM produtos WHERE slug = 'brinco-floral-em-resina-demo')
+   AND url = '/images/colecao-brincos-florais.png';
 
 INSERT INTO produto_imagens (
   produto_id, url, alt_text, mime_type, ordem, principal
 )
-SELECT id, '/images/processo-artesanal.webp',
-       'Detalhe do processo artesanal — imagem demonstrativa',
-       'image/webp', 1, FALSE
+SELECT id, '/images/colecao-brincos-florais.png',
+       'Coleção de brincos artesanais de resina com flores preservadas',
+       'image/png', 1, FALSE
   FROM produtos
  WHERE slug = 'brinco-floral-em-resina-demo'
    AND NOT EXISTS (
      SELECT 1 FROM produto_imagens
-      WHERE produto_id = produtos.id AND url = '/images/processo-artesanal.webp'
+      WHERE produto_id = produtos.id AND url = '/images/colecao-brincos-florais.png'
    );
 
 INSERT INTO produto_colecoes (produto_id, colecao_id, ordem)

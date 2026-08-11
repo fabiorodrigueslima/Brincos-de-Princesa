@@ -13,7 +13,7 @@ export function ProductCard({ product }) {
     <article className="product-card">
       <Link className="product-card-image" to={`/produto/${product.slug}`} aria-label={`Ver ${product.name}`}>
         {product.image
-          ? <img src={product.image.url} alt={product.image.alt} loading="lazy" />
+          ? <img src={product.image.url} alt={product.image.alt || product.name} loading="lazy" />
           : <div className="product-image-placeholder"><img src="/brand/brinco-de-princesa-logo.png" alt="" /><span>Imagem em preparação</span></div>}
         <div className="product-badges">{isDevelopmentData && <span>Demonstração</span>}{product.isNew && <span>Novo</span>}{!product.inStock && <span>Esgotado</span>}</div>
       </Link>
