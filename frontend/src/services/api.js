@@ -9,12 +9,13 @@ export class ApiError extends Error {
   }
 }
 
-async function request(path, { signal, method = 'GET', body } = {}) {
+async function request(path, { signal, method = 'GET', body, headers = {} } = {}) {
   const response = await fetch(`${API_BASE_URL}${path}`, {
     method,
-    headers: { Accept: 'application/json', ...(body ? { 'Content-Type': 'application/json' } : {}) },
+    headers: { Accept: 'application/json', ...(body ? { 'Content-Type': 'application/json' } : {}), ...headers },
     body: body ? JSON.stringify(body) : undefined,
     signal,
+    credentials: 'include',
   })
   const payload = await response.json().catch(() => null)
   if (!response.ok) {
@@ -23,12 +24,26 @@ async function request(path, { signal, method = 'GET', body } = {}) {
   return payload
 }
 
+export function adminLogin(credentials, signal) { return request('/admin/auth/login',{signal,method:'POST',body:credentials}) }
+export function adminMe(signal) { return request('/admin/auth/me',{signal}) }
+export function adminLogout(csrfToken, signal) { return request('/admin/auth/logout',{signal,method:'POST',headers:{'X-CSRF-Token':csrfToken}}) }
+export function getAdminResource(resource, params = {}, signal) { const query=new URLSearchParams(params);return request(`/admin/${resource}${query.size?`?${query}`:''}`,{signal}) }
+export function mutateAdminResource(path, method, body, csrfToken, signal) { return request(`/admin/${path}`,{signal,method,body,headers:{'X-CSRF-Token':csrfToken}}) }
+
 export function validateCart(items, signal) {
   return request('/cart/validate', { signal, method: 'POST', body: { items } })
 }
 
 export function getCategories(signal) {
   return request('/catalog/categories', { signal })
+}
+
+export function getCollections(signal) {
+  return request('/catalog/collections', { signal })
+}
+
+export function getCollection(slug, signal) {
+  return request(`/catalog/collections/${encodeURIComponent(slug)}`, { signal })
 }
 
 export function getProducts(filters, signal) {
@@ -41,4 +56,30 @@ export function getProducts(filters, signal) {
 
 export function getProduct(slug, signal) {
   return request(`/products/${encodeURIComponent(slug)}`, { signal })
+}
+
+export function lookupPostalCode(postalCode, signal) {
+  return request(`/checkout/postal-code/${encodeURIComponent(postalCode)}`, { signal })
+}
+
+export function quoteCheckout(payload, signal) {
+  return request('/checkout/quote', { signal, method: 'POST', body: payload })
+}
+
+export function createOrder(payload, idempotencyKey, signal) {
+  return request('/orders', { signal, method: 'POST', body: payload, headers: { 'Idempotency-Key': idempotencyKey } })
+}
+
+export function getOrder(code, accessToken, signal) {
+  return request(`/orders/${encodeURIComponent(code)}`, { signal, headers: { 'X-Order-Token': accessToken } })
+}
+
+export function getCourses(filters = {}, signal) {
+  const params = new URLSearchParams()
+  for (const [key, value] of Object.entries(filters)) if (value !== '' && value !== undefined) params.set(key, value)
+  return request(`/courses?${params}`, { signal })
+}
+
+export function getCourse(slug, signal) {
+  return request(`/courses/${encodeURIComponent(slug)}`, { signal })
 }

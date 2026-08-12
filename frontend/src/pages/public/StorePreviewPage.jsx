@@ -6,8 +6,8 @@ import { getCategories, getProducts } from '../../services/api.js'
 
 const initialFilters = { q: '', category: '', sort: 'newest', page: 1, limit: 12 }
 
-export function StorePreviewPage() {
-  const [filters, setFilters] = useState(initialFilters)
+export function StorePreviewPage({ category, promotions = false, title = 'Todos os produtos', eyebrow = 'Loja', description = 'Explore todas as peças disponíveis no catálogo.', emptyText }) {
+  const [filters, setFilters] = useState(() => ({ ...initialFilters, ...(category ? { category } : {}), ...(promotions ? { promotions: true } : {}) }))
   const [search, setSearch] = useState('')
   const [catalog, setCatalog] = useState(null)
   const [categories, setCategories] = useState([])
@@ -42,21 +42,21 @@ export function StorePreviewPage() {
 
   return (
     <>
-      <PageMeta title="Loja" description="Descubra brincos e peças artesanais da Brinco de Princesa." />
-      <PageHero eyebrow="Loja" title="Peças feitas para florescer com você." text="Explore o catálogo real por categoria. Preços e disponibilidade vêm diretamente do servidor." />
+      <PageMeta title={title} description={description} />
+      <PageHero eyebrow={eyebrow} title={title} text={description} />
       <section className="shop-section container">
         <div className="shop-toolbar">
           <form className="shop-search" role="search" onSubmit={submitSearch}>
             <label htmlFor="store-search">Buscar na loja</label>
             <div><input id="store-search" type="search" value={search} maxLength="100" placeholder="Nome ou detalhe da peça" onChange={(event) => setSearch(event.target.value)} /><button type="submit">Buscar</button></div>
           </form>
-          <label>Categoria<select value={filters.category} onChange={(event) => updateFilter('category', event.target.value)}><option value="">Todas</option>{categories.map((category) => <option key={category.slug} value={category.slug}>{category.name}</option>)}</select></label>
+          {!category && <label>Categoria<select value={filters.category} onChange={(event) => updateFilter('category', event.target.value)}><option value="">Todas</option>{categories.map((item) => <option key={item.slug} value={item.slug}>{item.name}</option>)}</select></label>}
           <label>Ordenar<select value={filters.sort} onChange={(event) => updateFilter('sort', event.target.value)}><option value="newest">Novidades</option><option value="name">Nome</option><option value="price_asc">Menor preço</option><option value="price_desc">Maior preço</option></select></label>
         </div>
 
         {!catalog && !error && <div className="catalog-state" aria-live="polite"><span className="loader" />Carregando peças…</div>}
         {error && <div className="catalog-state catalog-error" role="status"><h2>O catálogo está temporariamente indisponível.</h2><p>{error}</p><p>Confirme se a API e o PostgreSQL estão configurados e tente novamente.</p></div>}
-        {catalog?.data.length === 0 && <div className="catalog-state"><h2>{filters.q || filters.category ? 'Nenhuma peça encontrada.' : 'Nenhum produto disponível no momento.'}</h2><p>{filters.q || filters.category ? 'Tente retirar algum filtro ou fazer uma nova busca.' : 'Novas peças artesanais serão apresentadas aqui em breve.'}</p></div>}
+        {catalog?.data.length === 0 && <div className="catalog-state"><h2>Nenhuma peça encontrada.</h2><p>{emptyText ?? (filters.q ? 'Tente fazer uma nova busca.' : 'Novas peças serão apresentadas aqui em breve.')}</p></div>}
         {catalog?.data.length > 0 && <>
           <div className="catalog-summary">{catalog.pagination.total} {catalog.pagination.total === 1 ? 'peça encontrada' : 'peças encontradas'}</div>
           <div className="product-grid">{catalog.data.map((product) => <ProductCard key={product.id} product={product} />)}</div>

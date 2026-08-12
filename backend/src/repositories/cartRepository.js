@@ -6,11 +6,11 @@ export function createCartRepository(dbQuery = query) {
       if (variantIds.length === 0) return []
       const result = await dbQuery({
         text: `
-          SELECT v.id AS variante_id, v.sku, v.nome AS variante_nome, v.ativa,
+          SELECT v.id AS variante_id, v.sku, v.nome AS variante_nome, v.atributos, v.ativa,
                  v.preco, v.preco_promocional,
                  GREATEST(v.estoque - v.estoque_reservado, 0)::integer AS estoque_disponivel,
                  p.id AS produto_id, p.nome AS produto_nome, p.slug AS produto_slug,
-                 p.status AS produto_status,
+                 p.status AS produto_status, p.peso_gramas,
                  image.url AS imagem_url, image.alt_text AS imagem_alt
             FROM app.produto_variantes v
             JOIN app.produtos p ON p.id = v.produto_id

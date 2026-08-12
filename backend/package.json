@@ -9,6 +9,7 @@
     "db:check": "node --env-file-if-exists=.env src/scripts/checkDatabase.js",
     "db:migrate": "node --env-file-if-exists=.env src/scripts/runMigrations.js",
     "db:seed:dev": "node --env-file-if-exists=.env src/scripts/runDevelopmentSeed.js",
+    "admin:create": "node --env-file-if-exists=.env src/scripts/createAdmin.js",
     "lint": "eslint .",
     "test": "npm run test:unit && npm run test:postgres",
     "test:unit": "vitest run --exclude tests/*-postgres.integration.test.js",

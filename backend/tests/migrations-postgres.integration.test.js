@@ -34,19 +34,26 @@ describe('PostgreSQL migrations', () => {
     temporaryDirectories = []
   })
 
-  it('applies, records and does not reapply the baseline', async () => {
+  it('applies, records and does not reapply all migrations', async () => {
     const first = await runMigrations({ client, directory: migrationsDirectory })
     const second = await runMigrations({ client, directory: migrationsDirectory })
     const recorded = await client.query(
       'SELECT version, name, checksum FROM app.schema_migrations WHERE version = 1',
     )
 
-    expect(first.applied).toEqual(['001_baseline.sql'])
+    expect(first.applied).toEqual(['001_baseline.sql', '002_commercial_categories.sql', '003_courses.sql', '004_orders_payments.sql', '005_admin_security.sql'])
     expect(first.pending).toBe(0)
     expect(second.applied).toEqual([])
-    expect(second.skipped).toEqual(['001_baseline.sql'])
+    expect(second.skipped).toEqual(['001_baseline.sql', '002_commercial_categories.sql', '003_courses.sql', '004_orders_payments.sql', '005_admin_security.sql'])
     expect(recorded.rows[0]).toMatchObject({ version: 1, name: 'baseline' })
     expect(recorded.rows[0].checksum.trim()).toMatch(/^[a-f0-9]{64}$/)
+
+    const categories = await client.query(`SELECT slug, ativa FROM app.categorias WHERE slug IN ('brincos','aneis','colares','pulseiras','resina','florais') ORDER BY slug`)
+    expect(categories.rows.filter((row) => row.ativa).map((row) => row.slug)).toEqual(['aneis', 'brincos', 'colares', 'pulseiras'])
+    const courseTables = await client.query("SELECT to_regclass('app.cursos') cursos,to_regclass('app.curso_sessoes') sessoes")
+    expect(courseTables.rows[0]).toEqual({ cursos:'app.cursos',sessoes:'app.curso_sessoes' })
+    const reservationConfig = await client.query("SELECT valor FROM app.configuracoes WHERE chave='checkout.reservation_minutes'")
+    expect(reservationConfig.rows[0].valor).toBe(30)
   })
 
   it('rejects a changed checksum for an applied migration', async () => {

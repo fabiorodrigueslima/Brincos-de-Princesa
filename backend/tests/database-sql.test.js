@@ -18,8 +18,10 @@ describe('manual PostgreSQL schema', () => {
       readSql('permissions.sql'),
       readSql('verify.sql'),
       readSql('migrations/001_baseline.sql'),
+      readSql('migrations/004_orders_payments.sql'),
+      readSql('migrations/005_admin_security.sql'),
       readSql('seeds/development/001_catalog_demo.sql'),
-    ])).resolves.toHaveLength(8)
+    ])).resolves.toHaveLength(10)
   })
 
   it('defines every mandatory table', async () => {
@@ -41,6 +43,15 @@ describe('manual PostgreSQL schema', () => {
     expect(sql).toContain('numeric(12,2)')
     expect(sql).not.toMatch(/\b(float|real|double precision)\b/)
     expect(sql).not.toMatch(/\b(cvv|numero_cartao|card_number|pan_completo)\b/)
+  })
+
+  it('revalidates existing checkout and future order structures', async () => {
+    const sql = await readSql('tables.sql')
+    for (const table of ['clientes', 'enderecos', 'pedidos', 'pedido_itens', 'reservas_estoque', 'configuracoes']) {
+      expect(sql).toMatch(new RegExp(`CREATE TABLE IF NOT EXISTS ${table}\\b`))
+    }
+    expect(sql).toContain("enderecos_cep_formato CHECK (cep ~ '^[0-9]{5}-?[0-9]{3}$')")
+    expect(sql).toContain('pedidos_total_coerente CHECK (total = subtotal - desconto + frete)')
   })
 
   it('does not seed credentials or grant broad runtime access', async () => {

@@ -12,6 +12,11 @@ const schema = z.object({
   DB_POOL_MAX: z.coerce.number().int().min(1).max(30).default(10),
   DB_IDLE_TIMEOUT_MS: z.coerce.number().int().min(1000).max(60000).default(10000),
   DB_CONNECTION_TIMEOUT_MS: z.coerce.number().int().min(500).max(30000).default(3000),
+  POSTAL_CODE_PROVIDER_URL: z.string().url().default('https://brasilapi.com.br/api/cep/v2'),
+  EXTERNAL_REQUEST_TIMEOUT_MS: z.coerce.number().int().min(500).max(15000).default(4000),
+  SHIPPING_PROVIDER: z.enum(['disabled']).default('disabled'),
+  PAYMENT_PROVIDER: z.enum(['disabled']).default('disabled'),
+  ADMIN_SESSION_HOURS: z.coerce.number().int().min(1).max(24).default(8),
 }).superRefine((value, context) => {
   if (value.NODE_ENV === 'production' && !value.DATABASE_URL) {
     context.addIssue({ code: 'custom', path: ['DATABASE_URL'], message: 'obrigatória em produção' })

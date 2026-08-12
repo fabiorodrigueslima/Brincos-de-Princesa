@@ -1,17 +1,18 @@
 import { useState } from 'react'
-import { Link, NavLink, Outlet } from 'react-router-dom'
+import { Link, Outlet } from 'react-router-dom'
 import { MenuIcon, ShoppingBagIcon, XIcon } from '../components/common/Icons.jsx'
 import { ScrollToTop } from '../components/common/ScrollToTop.jsx'
 import { useCart } from '../context/cartContextValue.js'
 
 const navigation = [
-  ['/', 'Início'],
-  ['/sobre', 'Nossa História'],
+  ['/novidades', 'Novidades'],
+  ['/brincos', 'Brincos'],
+  ['/aneis', 'Anéis'],
+  ['/colares', 'Colares'],
+  ['/pulseiras', 'Pulseiras'],
   ['/colecoes', 'Coleções'],
-  ['/loja', 'Loja'],
-  ['/personalizados', 'Personalizados'],
-  ['/como-e-feito', 'Como é feito'],
-  ['/contato', 'Contato'],
+  ['/promocoes', 'Promoções'],
+  ['/cursos', 'Cursos'],
 ]
 
 export function SiteLayout() {
@@ -23,7 +24,7 @@ export function SiteLayout() {
     <div className="site-shell">
       <ScrollToTop />
       <a className="skip-link" href="#conteudo-principal">Ir para o conteúdo</a>
-      <div className="announcement">Feito à mão, com tempo, afeto e delicadeza.</div>
+      <div className="announcement">Biojoias artesanais <span aria-hidden="true">•</span> Feitas à mão <span aria-hidden="true">•</span> Entrega em configuração</div>
       <header className="site-header">
         <Link className="brand" to="/" aria-label="Brinco de Princesa — início" onClick={() => setMenuOpen(false)}>
           <img src="/brand/brinco-de-princesa-logo.png" width="72" height="72" alt="" />
@@ -43,7 +44,7 @@ export function SiteLayout() {
 
         <nav id="primary-navigation" className={menuOpen ? 'primary-nav is-open' : 'primary-nav'} aria-label="Navegação principal">
           {navigation.map(([to, label]) => (
-            <NavLink key={to} to={to} end={to === '/'} onClick={() => setMenuOpen(false)}>{label}</NavLink>
+            <Link key={label} to={to} onClick={() => setMenuOpen(false)}>{label}</Link>
           ))}
         </nav>
 
@@ -59,15 +60,15 @@ export function SiteLayout() {
         <div className="footer-grid container">
           <div className="footer-brand">
             <img src="/brand/brinco-de-princesa-logo.png" width="84" height="84" alt="" />
-            <div><strong>Brinco de Princesa</strong><p>Peças que florescem em cada detalhe.</p></div>
+            <div><strong>Brinco de Princesa</strong><p>Biojoias artesanais em cerâmica.</p></div>
           </div>
-          <div><h2>Descubra</h2><Link to="/sobre">Nossa história</Link><Link to="/como-e-feito">Processo artesanal</Link><Link to="/personalizados">Personalizados</Link></div>
-          <div><h2>Atendimento</h2><Link to="/contato">Contato</Link><Link to="/trocas-e-devolucoes">Trocas e devoluções</Link><Link to="/loja">Loja</Link></div>
-          <div><h2>Transparência</h2><Link to="/privacidade">Privacidade</Link><Link to="/termos">Termos de uso</Link><p>Somente cookies essenciais.</p></div>
+          <div><h2>Loja</h2><Link to="/brincos">Brincos</Link><Link to="/aneis">Anéis</Link><Link to="/colares">Colares</Link><Link to="/pulseiras">Pulseiras</Link><Link to="/colecoes">Coleções</Link><Link to="/promocoes">Promoções</Link></div>
+          <div><h2>Descubra</h2><Link to="/sobre">Nossa história</Link><Link to="/como-e-feito">Como é feito</Link><Link to="/cursos">Cursos</Link><Link to="/personalizados">Personalizados</Link></div>
+          <div><h2>Atendimento</h2><Link to="/contato">Contato</Link><Link to="/trocas-e-devolucoes">Trocas e devoluções</Link><Link to="/privacidade">Privacidade</Link><Link to="/termos">Termos</Link></div>
         </div>
         <div className="footer-bottom container">
           <span>© {new Date().getFullYear()} Brinco de Princesa.</span>
-          <span>Artesanal por natureza.</span>
+          <span>Matéria transformada à mão.</span>
         </div>
       </footer>
     </div>

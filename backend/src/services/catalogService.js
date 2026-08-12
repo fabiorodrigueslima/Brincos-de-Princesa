@@ -75,7 +75,7 @@ export function createCatalogService({ categories = catalogRepository, products 
 
       const { product, variants, images, collections } = result
       return {
-        id: product.id,
+        id: Number(product.id),
         name: product.nome,
         slug: product.slug,
         description: product.descricao,
@@ -89,7 +89,7 @@ export function createCatalogService({ categories = catalogRepository, products 
         category: product.categoria_slug ? { name: product.categoria_nome, slug: product.categoria_slug } : null,
         seo: { title: product.meta_title, description: product.meta_description },
         variants: variants.map((variant) => ({
-          id: variant.id,
+          id: Number(variant.id),
           sku: variant.sku,
           name: variant.nome,
           attributes: variant.atributos,
@@ -99,8 +99,8 @@ export function createCatalogService({ categories = catalogRepository, products 
           inStock: variant.estoque_disponivel > 0,
         })),
         images: images.map((image) => ({
-          id: image.id,
-          variantId: image.variante_id,
+          id: Number(image.id),
+          variantId: image.variante_id == null ? null : Number(image.variante_id),
           url: image.url,
           alt: image.alt_text,
           width: image.largura_px,

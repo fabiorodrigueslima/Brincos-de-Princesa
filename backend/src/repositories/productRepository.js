@@ -26,6 +26,16 @@ function buildFilters(filters) {
     values.push(filters.collection)
     conditions.push(`EXISTS (SELECT 1 FROM app.produto_colecoes filter_pc JOIN app.colecoes filter_collection ON filter_collection.id = filter_pc.colecao_id WHERE filter_pc.produto_id = p.id AND filter_collection.slug = $${values.length} AND filter_collection.ativa = TRUE)`)
   }
+  if (filters.promotions) {
+    conditions.push(`EXISTS (
+      SELECT 1 FROM app.produto_variantes promotion_variant
+       WHERE promotion_variant.produto_id = p.id
+         AND promotion_variant.ativa = TRUE
+         AND promotion_variant.preco_promocional IS NOT NULL
+         AND promotion_variant.preco_promocional > 0
+         AND promotion_variant.preco_promocional < promotion_variant.preco
+    )`)
+  }
 
   return { conditions, values }
 }
@@ -48,13 +58,25 @@ export function createProductRepository(dbQuery = query) {
         text: `
           SELECT p.id, p.nome, p.slug, p.descricao, p.novidade, p.destaque,
                  c.nome AS categoria_nome, c.slug AS categoria_slug,
-                 min(COALESCE(v.preco_promocional, v.preco)) AS menor_preco,
-                 min(v.preco) FILTER (WHERE v.preco_promocional IS NOT NULL) AS preco_original,
-                 bool_or((v.estoque - v.estoque_reservado) > 0) AS em_estoque,
+                 price_variant.preco_efetivo AS menor_preco,
+                 CASE WHEN price_variant.preco_promocional IS NOT NULL THEN price_variant.preco END AS preco_original,
+                 stock.em_estoque,
                  image.url AS imagem_url, image.alt_text AS imagem_alt
             FROM app.produtos p
             LEFT JOIN app.categorias c ON c.id = p.categoria_id
-            JOIN app.produto_variantes v ON v.produto_id = p.id AND v.ativa = TRUE
+            JOIN LATERAL (
+              SELECT v.preco, v.preco_promocional,
+                     COALESCE(v.preco_promocional, v.preco) AS preco_efetivo
+                FROM app.produto_variantes v
+               WHERE v.produto_id = p.id AND v.ativa = TRUE
+               ORDER BY COALESCE(v.preco_promocional, v.preco), v.id
+               LIMIT 1
+            ) price_variant ON TRUE
+            JOIN LATERAL (
+              SELECT bool_or((v.estoque - v.estoque_reservado) > 0) AS em_estoque
+                FROM app.produto_variantes v
+               WHERE v.produto_id = p.id AND v.ativa = TRUE
+            ) stock ON TRUE
             LEFT JOIN LATERAL (
               SELECT pi.url, pi.alt_text
                 FROM app.produto_imagens pi
@@ -63,7 +85,6 @@ export function createProductRepository(dbQuery = query) {
                LIMIT 1
             ) image ON TRUE
            WHERE ${where}
-           GROUP BY p.id, c.id, image.url, image.alt_text
            ORDER BY ${safeOrder}
            LIMIT ${limitPlaceholder} OFFSET ${offsetPlaceholder}
         `,

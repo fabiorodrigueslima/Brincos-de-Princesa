@@ -1,26 +1,29 @@
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowIcon } from '../../components/common/Icons.jsx'
 import { PageHero } from '../../components/common/PageHero.jsx'
 import { PageMeta } from '../../components/common/PageMeta.jsx'
-
-const collections = [
-  { name: 'Jardim Secreto', text: 'Flores preservadas e composições que parecem guardar um pequeno jardim.', position: 'center', image: '/images/brinco-folha-clara.png', alt: 'Brincos artesanais claros com folhas naturais preservadas' },
-  { name: 'Entre Pétalas', text: 'Tons suaves, transparências e formas leves para o cotidiano.', position: 'bottom', image: '/images/brinco-folha-terracota.png', alt: 'Brincos redondos com folhas em tom terracota' },
-  { name: 'Vinho & Ouro', text: 'Contrastes marcantes para peças delicadas com presença.', position: 'top', image: '/images/brinco-folha-preta.png', alt: 'Brincos artesanais pretos com delicados ramos dourados' },
-]
+import { getCollections } from '../../services/api.js'
 
 export function CollectionsPage() {
+  const [collections, setCollections] = useState([])
+
+  useEffect(() => {
+    const controller = new AbortController()
+    getCollections(controller.signal)
+      .then((response) => setCollections(response.data))
+      .catch((reason) => { if (reason.name !== 'AbortError') setCollections([]) })
+    return () => controller.abort()
+  }, [])
+
   return (
     <>
-      <PageMeta title="Coleções" description="Descubra coleções artesanais inspiradas em flores, natureza e histórias singulares." />
-      <PageHero eyebrow="Coleções" title="Pequenos universos para descobrir." text="Cada coleção parte de uma atmosfera, uma cor ou uma memória e ganha forma em séries de pequenas tiragens." />
-      <section className="section container"><div className="editorial-grid">
-        {collections.map((collection, index) => <article key={collection.name} className="editorial-card">
-          <img src={collection.image} alt={collection.alt} loading="lazy" style={{ objectPosition: collection.position }} />
-          <div><span>0{index + 1}</span><h2>{collection.name}</h2><p>{collection.text}</p><Link to="/loja">Ver na loja <ArrowIcon /></Link></div>
-        </article>)}
-      </div></section>
-      <section className="closing-cta"><div className="container narrow"><p className="eyebrow">Criação contínua</p><h2>Novas flores, formas e histórias chegam aos poucos.</h2><Link className="button button-light" to="/contato">Acompanhar novidades</Link></div></section>
+      <PageMeta title="Coleções autorais" description="Conheça as coleções de biojoias artesanais da Brinco de Princesa." />
+      <PageHero eyebrow="Coleções autorais" title="Pequenas séries, identidades próprias." text="Formas, texturas e referências se encontram em coleções criadas com tempo e intenção." />
+      {collections.length > 0
+        ? <section className="section container"><div className="collection-api-grid">{collections.map((collection) => <article key={collection.id}>{collection.imageUrl && <img src={collection.imageUrl} alt="" loading="lazy" />}<div><p className="eyebrow">Coleção</p><h2>{collection.name}</h2>{collection.description && <p>{collection.description}</p>}<Link className="text-link" to={`/colecoes/${collection.slug}`}>Conhecer coleção <ArrowIcon /></Link></div></article>)}</div></section>
+        : <section className="collections-empty container narrow"><p className="eyebrow">Em preparação</p><h2>As próximas coleções serão apresentadas aqui.</h2><p>Esta página está conectada à estrutura real do catálogo e não exibe nomes ou lançamentos fictícios. Quando uma coleção for publicada, ela ganhará espaço neste percurso.</p><Link className="button button-primary" to="/loja">Conhecer o catálogo</Link></section>}
+      <section className="closing-cta"><div className="container narrow"><p className="eyebrow">Criação em movimento</p><h2>Matéria, gesto e inspiração encontram novas formas.</h2><Link className="button button-light" to="/como-e-feito">Conheça o processo</Link></div></section>
     </>
   )
 }

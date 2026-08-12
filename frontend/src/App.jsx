@@ -11,20 +11,39 @@ import { ProcessPage } from './pages/public/ProcessPage.jsx'
 import { ProductPage } from './pages/public/ProductPage.jsx'
 import { StorePreviewPage } from './pages/public/StorePreviewPage.jsx'
 import { CartPage } from './pages/public/CartPage.jsx'
+import { CategoryCatalogPage } from './pages/public/CategoryCatalogPage.jsx'
+import { CollectionPage } from './pages/public/CollectionPage.jsx'
+import { CoursesPage } from './pages/public/CoursesPage.jsx'
+import { CoursePage } from './pages/public/CoursePage.jsx'
+import { CheckoutPage } from './pages/public/CheckoutPage.jsx'
+import { OrderPage } from './pages/public/OrderPage.jsx'
+import { AdminPage } from './pages/admin/AdminPage.jsx'
 import './styles/global.css'
 
 export default function App() {
   return (
     <BrowserRouter>
       <Routes>
+        <Route path="admin/*" element={<AdminPage />} />
         <Route element={<SiteLayout />}>
           <Route index element={<HomePage />} />
           <Route path="inicio" element={<Navigate to="/" replace />} />
           <Route path="sobre" element={<AboutPage />} />
           <Route path="colecoes" element={<CollectionsPage />} />
+          <Route path="colecoes/:slug" element={<CollectionPage />} />
           <Route path="loja" element={<StorePreviewPage />} />
+          <Route path="brincos" element={<CategoryCatalogPage category="brincos" />} />
+          <Route path="aneis" element={<CategoryCatalogPage category="aneis" />} />
+          <Route path="colares" element={<CategoryCatalogPage category="colares" />} />
+          <Route path="pulseiras" element={<CategoryCatalogPage category="pulseiras" />} />
+          <Route path="novidades" element={<StorePreviewPage title="Novidades" eyebrow="Novidades" description="Conheça as peças publicadas mais recentemente no catálogo." />} />
+          <Route path="promocoes" element={<StorePreviewPage promotions title="Promoções" eyebrow="Promoções" description="Peças com preço promocional real, validado diretamente pelo catálogo." emptyText="Nenhuma promoção está disponível no momento." />} />
+          <Route path="cursos" element={<CoursesPage />} />
+          <Route path="cursos/:slug" element={<CoursePage />} />
           <Route path="produto/:slug" element={<ProductPage />} />
           <Route path="carrinho" element={<CartPage />} />
+          <Route path="checkout" element={<CheckoutPage />} />
+          <Route path="pedido/:code" element={<OrderPage />} />
           <Route path="personalizados" element={<PersonalizadosPage />} />
           <Route path="como-e-feito" element={<ProcessPage />} />
           <Route path="contato" element={<ContactPage />} />

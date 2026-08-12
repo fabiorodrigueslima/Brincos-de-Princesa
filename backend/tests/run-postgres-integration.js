@@ -114,27 +114,39 @@ const { runtimeUrl, maintenanceUrl, testAdminUrl } = resolveConnections()
 await prepareTestDatabase(runtimeUrl, maintenanceUrl, testAdminUrl)
 
 const vitestEntry = resolve(backendDirectory, '../node_modules/vitest/vitest.mjs')
+const commonOptions = {
+  cwd: backendDirectory,
+  env: {
+    ...process.env,
+    NODE_ENV: 'test',
+    DATABASE_URL: runtimeUrl.toString(),
+    TEST_DATABASE_URL: runtimeUrl.toString(),
+    TEST_DATABASE_ADMIN_URL: testAdminUrl.toString(),
+  },
+  stdio: 'inherit',
+}
+
+// Migrations must finish before suites that exercise tables introduced by them.
+const migrationResult = spawnSync(
+  process.execPath,
+  [vitestEntry, 'run', 'tests/migrations-postgres.integration.test.js'],
+  commonOptions,
+)
+
+if (migrationResult.error) throw migrationResult.error
+if (migrationResult.status !== 0) process.exit(migrationResult.status ?? 1)
+
 const result = spawnSync(
   process.execPath,
   [
-    vitestEntry,
-    'run',
-    '--no-file-parallelism',
-    'tests/migrations-postgres.integration.test.js',
+    vitestEntry, 'run', '--no-file-parallelism',
     'tests/development-seed-postgres.integration.test.js',
     'tests/catalog-postgres.integration.test.js',
+    'tests/courses-postgres.integration.test.js',
+    'tests/orders-postgres.integration.test.js',
+    'tests/admin-postgres.integration.test.js',
   ],
-  {
-    cwd: backendDirectory,
-    env: {
-      ...process.env,
-      NODE_ENV: 'test',
-      DATABASE_URL: runtimeUrl.toString(),
-      TEST_DATABASE_URL: runtimeUrl.toString(),
-      TEST_DATABASE_ADMIN_URL: testAdminUrl.toString(),
-    },
-    stdio: 'inherit',
-  },
+  commonOptions,
 )
 
 if (result.error) throw result.error

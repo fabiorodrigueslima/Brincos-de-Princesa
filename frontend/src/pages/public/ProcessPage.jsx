@@ -4,23 +4,26 @@ import { PageHero } from '../../components/common/PageHero.jsx'
 import { PageMeta } from '../../components/common/PageMeta.jsx'
 
 const steps = [
-  ['01', 'Ideia', 'A inspiração começa em uma flor, uma paleta ou uma forma que merece ganhar vida.'],
-  ['02', 'Criação', 'Composição, proporção e leveza são pensadas antes de cada peça tomar forma.'],
-  ['03', 'Resina', 'Os elementos são posicionados à mão e recebem a resina em etapas cuidadosas.'],
-  ['04', 'Acabamento', 'Lixamento, polimento e montagem revelam o brilho e o conforto da peça.'],
-  ['05', 'Peça final', 'Cada criação passa por uma última inspeção antes de seguir para você.'],
+  ['01', 'Inspiração', 'Formas, texturas e referências dão início ao caminho de uma nova peça.'],
+  ['02', 'Modelagem', 'A matéria ganha forma pelas mãos, em um processo atento e intencional.'],
+  ['03', 'Secagem', 'O tempo participa do fazer e prepara a peça para as próximas transformações.'],
+  ['04', 'Queima', 'O encontro com o fogo transforma a matéria e consolida sua nova forma.'],
+  ['05', 'Acabamento', 'Superfícies, contornos e detalhes recebem cuidado antes da montagem.'],
+  ['06', 'Montagem', 'A parte cerâmica encontra os componentes que completam a biojoia.'],
+  ['07', 'Peça final', 'Cada criação é observada em seus detalhes antes de seguir adiante.'],
 ]
 
 export function ProcessPage() {
   return (
     <>
-      <PageMeta title="Como é feito" description="Conheça o processo artesanal por trás das peças em resina da Brinco de Princesa." />
-      <PageHero eyebrow="Processo artesanal" title="Mãos, matéria e tempo." text="Criar à mão é acompanhar cada transformação de perto. Conheça as etapas que fazem cada peça florescer." />
+      <PageMeta title="Como é feito" description="Da matéria à biojoia: conheça o processo artesanal das peças em cerâmica da Brinco de Princesa." />
+      <PageHero eyebrow="Processo artesanal" title="Da matéria à biojoia." text="Mãos, tempo e fogo acompanham a transformação da argila em uma peça com presença própria." />
       <section className="process-story container">
-        <div className="process-sticky"><img src="/images/processo-artesanal-novo.png" alt="Artesã trabalhando cuidadosamente na montagem de um brinco" width="1122" height="1402" /></div>
+        <div className="process-sticky"><img src="/images/processo-artesanal-novo.png" alt="Artesã trabalhando manualmente em uma peça, em fotografia provisória" width="1122" height="1402" /><p>Imagem provisória. O registro oficial do processo em cerâmica será incluído após a sessão fotográfica.</p></div>
         <ol className="process-details">{steps.map(([number, title, text]) => <li key={number}><span>{number}</span><div><h2>{title}</h2><p>{text}</p></div></li>)}</ol>
       </section>
-      <section className="care-banner"><div className="container narrow"><p className="eyebrow">Por que artesanal?</p><h2>Porque detalhes importantes não pedem pressa.</h2><p>O tempo manual permite olhar, ajustar e cuidar. Também significa que pequenas variações de cor, flor ou posição podem acontecer — elas são a assinatura da peça.</p><Link className="button button-light" to="/loja">Conhecer as criações <ArrowIcon /></Link></div></section>
+      <aside className="process-review-note container narrow"><strong>Processo em revisão</strong><p>Estas etapas apresentam uma visão conceitual e serão ajustadas com a artesã para refletir as técnicas adotadas em cada coleção.</p></aside>
+      <section className="care-banner"><div className="container narrow"><p className="eyebrow">O caráter artesanal</p><h2>Variações também contam uma história.</h2><p>Pequenas diferenças de cor, textura, desenho ou acabamento podem surgir no fazer manual e fazem parte da singularidade de cada peça.</p><Link className="button button-light" to="/loja">Conhecer as biojoias <ArrowIcon /></Link></div></section>
     </>
   )
 }

@@ -146,9 +146,38 @@ describe('catalog with isolated PostgreSQL', () => {
     })
   })
 
+  it('filters only products with a valid promotional variant', async () => {
+    const result = await catalogService.listProducts({
+      promotions: true, sort: 'newest', page: 1, limit: 12,
+    })
+    expect(result.items.map((item) => item.slug)).toContain(productSlug)
+    expect(result.items.find((item) => item.slug === productSlug)).toMatchObject({
+      price: '109.90', originalPrice: '129.90',
+    })
+  })
+
+  it('combines search, category, collection and promotion filters', async () => {
+    const result = await catalogService.listProducts({
+      q: 'Floral', category: 'brincos', collection: collectionSlug,
+      promotions: true, sort: 'newest', page: 1, limit: 1,
+    })
+    expect(result.pagination).toMatchObject({ total: 1, totalPages: 1 })
+    expect(result.items[0].slug).toBe(productSlug)
+  })
+
+  it('uses effective promotional price for descending and ascending sorting', async () => {
+    const ascending = await catalogService.listProducts({ sort: 'price_asc', page: 1, limit: 48 })
+    const descending = await catalogService.listProducts({ sort: 'price_desc', page: 1, limit: 48 })
+    expect(Number(ascending.items[0].price)).toBeLessThanOrEqual(Number(ascending.items.at(-1).price))
+    expect(Number(descending.items[0].price)).toBeGreaterThanOrEqual(Number(descending.items.at(-1).price))
+  })
+
   it('returns variants, images and collections for product detail', async () => {
     const product = await catalogService.getProduct(productSlug)
     expect(product.variants).toHaveLength(2)
+    expect(product.id).toEqual(expect.any(Number))
+    expect(product.variants[0].id).toEqual(expect.any(Number))
+    expect(product.images[0].id).toEqual(expect.any(Number))
     expect(product.images[0].primary).toBe(true)
     expect(product.variants[0]).toHaveProperty('availableStock')
     expect(product.collections[0].slug).toBe(collectionSlug)
@@ -160,6 +189,12 @@ describe('catalog with isolated PostgreSQL', () => {
 
     expect(categories.find((category) => category.slug === 'brincos')).toMatchObject({ productCount: 1 })
     expect(collections.find((collection) => collection.slug === collectionSlug)).toMatchObject({ productCount: 1 })
+  })
+
+  it('returns a controlled error for an unknown collection slug', async () => {
+    await expect(catalogService.getCollection(`inexistente-${fixtureId}`)).rejects.toMatchObject({
+      status: 404, code: 'COLLECTION_NOT_FOUND',
+    })
   })
 
   it('does not expose archived products in listing or detail', async () => {

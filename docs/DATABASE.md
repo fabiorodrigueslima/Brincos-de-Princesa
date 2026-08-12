@@ -1,5 +1,13 @@
 # Banco de dados
 
+`005_admin_security.sql` concede ao papel de runtime apenas os acessos administrativos necessários às tabelas e sequências já existentes. Sessões guardam hashes de token e CSRF; usuários guardam hash scrypt; ações relevantes usam `audit_logs`. Nenhuma credencial administrativa é criada pela migration.
+
+`004_orders_payments.sql` habilita escrita mínima do papel da API nas estruturas comerciais e registra `checkout.reservation_minutes = 30`. O pedido usa snapshots existentes e reutiliza reservas, movimentos, histórico, idempotência, pagamentos e webhooks. A reserva incrementa `estoque_reservado`; somente webhook autenticado aprovado reduz simultaneamente estoque físico e reservado.
+
+Na Fase 6 nenhuma migration foi necessária. `clientes`, `enderecos`, `pedidos`, `pedido_itens`, `reservas_estoque` e `configuracoes` já comportam o fluxo futuro, mas não são gravadas durante a cotação. Dados pessoais ficam somente na memória do frontend. Dimensões logísticas estruturadas permanecem pendentes antes da integração com uma transportadora.
+
+Na Fase 5 não foi necessária migration. `produtos` já contém descrição, materiais, medidas, peso, cuidados e prazo de produção; `produto_variantes.atributos` (JSONB) oferece extensão flexível para acabamento, metal, fecho, técnica ou outras propriedades reais. `produto_imagens` e as relações de coleção completam o detalhe público. As migrations 001, 002 e 003 não foram alteradas.
+
 O projeto usa PostgreSQL e a biblioteca `pg`, sem ORM. O bootstrap histórico do schema permanece em quatro arquivos:
 
 1. `database/database.sql`: papéis de menor privilégio, banco, schema e configuração básica;
@@ -10,6 +18,10 @@ O projeto usa PostgreSQL e a biblioteca `pg`, sem ORM. O bootstrap histórico do
 `database/permissions.sql` reaplica de forma idempotente o menor privilégio em uma instalação existente.
 
 A partir da baseline aprovada, alterações evolutivas são controladas por `database/migrations/`, checksum SHA-256 e `app.schema_migrations`. Consulte `docs/DATABASE-MIGRATIONS.md`. Scripts históricos já aplicados e migrations registradas são imutáveis.
+
+`002_commercial_categories.sql` estabelece Brincos, Anéis, Colares e Pulseiras como categorias comerciais. Resina, Florais e Personalizados são preservados como registros históricos inativos. O produto demo inequivocamente identificado como brinco permanece em Brincos e conserva Resina em `produtos.materiais`.
+
+`003_courses.sql` cria `cursos` e `curso_sessoes`. Cursos possuem publicação explícita; sessões são registros separados com período, local e vagas opcionais. A API recebe somente `SELECT`. Não existem inscrições, alunos, certificados ou pagamentos de cursos.
 
 ## Inicialização
 

@@ -9,6 +9,7 @@ import { corsPolicy, publicRateLimit, securityHeaders } from './security/httpSec
 export const app = express()
 app.disable('x-powered-by')
 app.set('trust proxy', env.TRUST_PROXY)
+app.set('adminOrigins', env.frontendOrigins)
 app.use(requestContext)
 app.use(securityHeaders)
 app.use(corsPolicy)

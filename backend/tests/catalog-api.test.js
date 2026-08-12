@@ -14,6 +14,17 @@ describe('catalog API validation', () => {
     expect(response.status).toBe(400)
   })
 
+  it('accepts only explicit boolean values for promotions', async () => {
+    const response = await request(app).get('/api/v1/products?promotions=maybe')
+    expect(response.status).toBe(400)
+    expect(response.body.error.code).toBe('VALIDATION_ERROR')
+  })
+
+  it('rejects unknown query parameters', async () => {
+    const response = await request(app).get('/api/v1/products?price=0.01')
+    expect(response.status).toBe(400)
+  })
+
   it('returns a controlled service response when PostgreSQL is not configured', async () => {
     const response = await request(app).get('/api/v1/products')
     expect(response.status).toBe(503)

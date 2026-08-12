@@ -1,0 +1,10 @@
+import { z } from 'zod'
+
+export const adminLoginSchema = z.object({ email: z.string().trim().email().max(254), password: z.string().min(12).max(200) }).strict()
+export const adminListSchema = z.object({ page: z.coerce.number().int().min(1).default(1), limit: z.coerce.number().int().min(1).max(50).default(20), q: z.string().trim().max(100).default(''), status: z.string().trim().max(30).optional() }).strict()
+export const idParamsSchema = z.object({ id: z.coerce.number().int().positive() }).strict()
+export const productSchema = z.object({ name: z.string().trim().min(2).max(160), slug: z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/).max(180), description: z.string().max(10000).default(''), materials: z.string().max(2000).nullable().optional(), dimensions: z.string().max(1000).nullable().optional(), weightGrams: z.number().min(0).nullable().optional(), care: z.string().max(3000).nullable().optional(), productionDays: z.number().int().min(0).max(365).default(0), categoryId: z.number().int().positive().nullable().optional(), status: z.enum(['DRAFT','ACTIVE','ARCHIVED']).default('DRAFT') }).strict()
+export const variantSchema = z.object({ name: z.string().trim().min(1).max(120), sku: z.string().trim().min(1).max(64), price: z.string().regex(/^\d{1,10}(\.\d{2})$/), salePrice: z.string().regex(/^\d{1,10}(\.\d{2})$/).nullable().optional(), stock: z.number().int().min(0).max(32767), active: z.boolean(), attributes: z.record(z.string(), z.union([z.string(), z.number(), z.boolean()])).default({}) }).strict().refine((v) => v.salePrice == null || Number(v.salePrice) < Number(v.price), { path: ['salePrice'], message: 'Promoção deve ser menor que o preço.' })
+export const stockSchema = z.object({ delta: z.number().int().min(-32767).max(32767).refine((value) => value !== 0), reason: z.string().trim().min(3).max(240) }).strict()
+export const statusSchema = z.object({ status: z.enum(['IN_PRODUCTION','READY_TO_SHIP','SHIPPED','DELIVERED','CANCELLED']), reason: z.string().trim().min(3).max(240) }).strict()
+export const settingSchema = z.object({ reservationMinutes: z.number().int().min(5).max(1440) }).strict()
