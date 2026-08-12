@@ -29,4 +29,9 @@ describe('cart state', () => {
     expect(readCart(storage)).toEqual([])
     expect(storage.removeItem).toHaveBeenCalledWith(CART_STORAGE_KEY)
   })
+
+  it('restores only variant id and quantity regardless of viewport changes', () => {
+    const storage = { getItem: vi.fn(() => JSON.stringify([{ variantId: 42, quantity: 2, price: 0.01, total: 0.02 }])) }
+    expect(readCart(storage)).toEqual([{ variantId: 42, quantity: 2 }])
+  })
 })

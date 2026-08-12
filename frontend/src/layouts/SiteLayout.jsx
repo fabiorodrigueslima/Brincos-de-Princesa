@@ -31,27 +31,28 @@ export function SiteLayout() {
           <span>Brinco de Princesa</span>
         </Link>
 
-        <button
-          className="menu-toggle"
-          type="button"
-          aria-expanded={menuOpen}
-          aria-controls="primary-navigation"
-          aria-label={menuOpen ? 'Fechar menu' : 'Abrir menu'}
-          onClick={() => setMenuOpen((open) => !open)}
-        >
-          {menuOpen ? <XIcon /> : <MenuIcon />}
-        </button>
-
         <nav id="primary-navigation" className={menuOpen ? 'primary-nav is-open' : 'primary-nav'} aria-label="Navegação principal">
           {navigation.map(([to, label]) => (
             <Link key={label} to={to} onClick={() => setMenuOpen(false)}>{label}</Link>
           ))}
         </nav>
 
-        <Link className="store-shortcut" to="/carrinho" aria-label={`Carrinho com ${itemCount} ${itemCount === 1 ? 'item' : 'itens'}`}>
-          <ShoppingBagIcon />
-          <span>Carrinho</span>{itemCount > 0 && <strong className="cart-badge" aria-hidden="true">{itemCount}</strong>}
-        </Link>
+        <div className="header-actions">
+          <Link className="store-shortcut" to="/carrinho" aria-label={`Carrinho, ${itemCount} ${itemCount === 1 ? 'item' : 'itens'}`} onClick={() => setMenuOpen(false)}>
+            <ShoppingBagIcon />
+            <span>Carrinho</span>{itemCount > 0 && <strong className="cart-badge" aria-hidden="true">{itemCount}</strong>}
+          </Link>
+          <button
+            className="menu-toggle"
+            type="button"
+            aria-expanded={menuOpen}
+            aria-controls="primary-navigation"
+            aria-label={menuOpen ? 'Fechar menu' : 'Abrir menu'}
+            onClick={() => setMenuOpen((open) => !open)}
+          >
+            {menuOpen ? <XIcon /> : <MenuIcon />}
+          </button>
+        </div>
       </header>
 
       <main id="conteudo-principal"><Outlet /></main>
