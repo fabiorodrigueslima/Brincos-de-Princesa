@@ -14,7 +14,9 @@ export function createCheckoutService({ cart = cartService, shipping = shippingP
       }
       const options = await shipping.quote({
         postalCode: input.address.postalCode,
-        items: cartResult.items.map((item) => ({ variantId: item.variantId, quantity: item.quantity, weightGrams: item.weightGrams ?? null })),
+        state: input.address.state,
+        subtotal: cartResult.subtotal,
+        items: cartResult.items.map((item) => ({ variantId: item.variantId, quantity: item.quantity, weightGrams: item.weightGrams ?? null, dimensionsCm: item.dimensionsCm ?? null })),
       })
       const normalized = options.map((option) => ({ id: String(option.id), service: String(option.service), carrier: option.carrier ? String(option.carrier) : null, price: toDecimal(toCents(option.price)), estimatedDays: Number.isInteger(option.estimatedDays) ? option.estimatedDays : null }))
       const selected = input.shippingOptionId ? normalized.find((option) => option.id === input.shippingOptionId) : null

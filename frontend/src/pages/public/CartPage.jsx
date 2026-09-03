@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { PageMeta } from '../../components/common/PageMeta.jsx'
 import { useCart } from '../../context/cartContextValue.js'
@@ -13,9 +13,39 @@ function availabilityMessage(item) {
   return ''
 }
 
+function ClearCartDialog({ onCancel, onConfirm }) {
+  const cancelButton = useRef(null)
+
+  useEffect(() => {
+    const previousFocus = document.activeElement
+    cancelButton.current?.focus()
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') onCancel()
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown)
+      previousFocus?.focus()
+    }
+  }, [onCancel])
+
+  return <div className="cart-dialog-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onCancel() }}>
+    <div className="cart-dialog" role="dialog" aria-modal="true" aria-labelledby="clear-cart-title" aria-describedby="clear-cart-description">
+      <p className="eyebrow">Organização do carrinho</p>
+      <h2 id="clear-cart-title">Esvaziar carrinho?</h2>
+      <p id="clear-cart-description">Todas as peças escolhidas serão removidas do seu carrinho.</p>
+      <div className="cart-dialog-actions">
+        <button ref={cancelButton} className="button button-ghost" type="button" onClick={onCancel}>Manter peças</button>
+        <button className="button button-primary" type="button" onClick={onConfirm}>Esvaziar carrinho</button>
+      </div>
+    </div>
+  </div>
+}
+
 export function CartPage() {
   const { items, removeItem, updateQuantity, clearCart } = useCart()
   const [result, setResult] = useState({ key: '', data: null, error: '' })
+  const [isClearDialogOpen, setIsClearDialogOpen] = useState(false)
   const itemsKey = JSON.stringify(items)
 
   useEffect(() => {
@@ -40,7 +70,7 @@ export function CartPage() {
 
   return <section className="cart-page container">
     <PageMeta title="Carrinho" description="Revise as peças escolhidas." />
-    <div className="cart-heading"><div><p className="eyebrow">Suas escolhas</p><h1>Carrinho</h1></div><button className="text-button" type="button" onClick={() => { if (window.confirm('Deseja remover todas as peças do carrinho?')) clearCart() }}>Limpar carrinho</button></div>
+    <div className="cart-heading"><div><p className="eyebrow">Suas escolhas</p><h1>Carrinho</h1></div><button className="text-button" type="button" onClick={() => setIsClearDialogOpen(true)}>Limpar carrinho</button></div>
     <div className="cart-announcement" aria-live="polite">{error || (!validated ? 'Atualizando preços e disponibilidade…' : `${validated.items.length} item(ns) validado(s).`)}</div>
     {error && <div className="catalog-state catalog-error"><h2>Não foi possível validar o carrinho.</h2><p>{error}</p><button className="button button-secondary" type="button" onClick={() => window.location.reload()}>Tentar novamente</button></div>}
     {!error && !validated && <div className="catalog-state"><span className="loader" />Consultando preços e estoque atuais…</div>}
@@ -52,5 +82,6 @@ export function CartPage() {
       <strong className="cart-subtotal">{item.subtotal ? money(item.subtotal) : '—'}</strong>
       <button className="remove-item" type="button" aria-label={`Remover ${item.productName || 'produto'} do carrinho`} onClick={() => removeItem(item.variantId)}>Remover</button>
     </article>)}</div><aside className="cart-summary"><h2>Resumo</h2><div><span>Subtotal</span><strong>{money(validated.subtotal)}</strong></div><div><span>Frete</span><span>Consultado no checkout</span></div><p>Os preços e a disponibilidade foram conferidos agora. O carrinho não reserva estoque.</p>{validated.items.every((item) => item.available) && <Link className="button button-primary" to="/checkout">Ir para o checkout</Link>}<Link className="button button-ghost" to="/loja">Continuar comprando</Link></aside></div>}
+    {isClearDialogOpen && <ClearCartDialog onCancel={() => setIsClearDialogOpen(false)} onConfirm={() => { clearCart(); setIsClearDialogOpen(false) }} />}
   </section>
 }

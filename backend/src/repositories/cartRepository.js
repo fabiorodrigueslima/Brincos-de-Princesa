@@ -11,6 +11,8 @@ export function createCartRepository(dbQuery = query) {
                  GREATEST(v.estoque - v.estoque_reservado, 0)::integer AS estoque_disponivel,
                  p.id AS produto_id, p.nome AS produto_nome, p.slug AS produto_slug,
                  p.status AS produto_status, p.peso_gramas,
+                 NULL::numeric AS largura_cm, NULL::numeric AS altura_cm,
+                 NULL::numeric AS comprimento_cm,
                  image.url AS imagem_url, image.alt_text AS imagem_alt
             FROM app.produto_variantes v
             JOIN app.produtos p ON p.id = v.produto_id

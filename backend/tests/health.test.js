@@ -11,6 +11,8 @@ describe('health endpoints', () => {
     expect(response.headers['x-request-id']).toBeTruthy()
   })
 
+  it('offers conventional health and readiness aliases',async()=>{expect((await request(app).get('/api/v1/health')).status).toBe(200);expect((await request(app).get('/api/v1/ready')).status).toBe(503)})
+
   it('returns a controlled 404 response', async () => {
     const response = await request(app).get('/api/v1/unknown')
     expect(response.status).toBe(404)

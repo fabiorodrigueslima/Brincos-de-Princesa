@@ -15,8 +15,8 @@ BEGIN
    WHERE table_schema = 'app'
      AND table_name <> 'schema_migrations';
 
-  IF total_tabelas_negocio <> 26 THEN
-    RAISE EXCEPTION 'Esperadas 26 tabelas de negócio no schema app; encontradas %', total_tabelas_negocio;
+  IF total_tabelas_negocio <> 30 THEN
+    RAISE EXCEPTION 'Esperadas 30 tabelas de negócio no schema app; encontradas %', total_tabelas_negocio;
   END IF;
 
   IF to_regclass('app.schema_migrations') IS NULL THEN

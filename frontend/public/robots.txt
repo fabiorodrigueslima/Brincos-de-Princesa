@@ -3,3 +3,8 @@ Allow: /
 Disallow: /admin
 Disallow: /checkout
 Disallow: /pedido/
+Disallow: /minha-conta
+Disallow: /login
+Disallow: /cadastro
+Disallow: /recuperar-senha
+Disallow: /redefinir-senha

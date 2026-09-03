@@ -72,7 +72,7 @@ describe('orders, stock and payment with isolated PostgreSQL', () => {
     expect((await orderRepo.findPublic(created.code, hash(expiring.accessToken))).status).toBe('CANCELLED')
     const expiredOrder = await admin.query({ text: `SELECT id FROM app.pedidos WHERE codigo_publico=$1`, values: [created.code] })
     await admin.query({ text: `INSERT INTO app.pagamentos(pedido_id,provedor,gateway_payment_id,idempotency_key,status,metodo,valor) VALUES($1,'sandbox',$2,$3,'PENDING','PIX',110)`, values: [expiredOrder.rows[0].id, `pay-expired-${suffix}`, `payment-expired-${suffix}`] })
-    await expect(paymentRepo.processWebhook({ provider: 'sandbox', eventId: `evt-${suffix}-expired`, paymentId: `pay-expired-${suffix}`, type: 'payment.approved', status: 'APPROVED', payloadHash: hash('expired-event') })).resolves.toEqual({ latePayment: true })
+    await expect(paymentRepo.processWebhook({ provider: 'sandbox', eventId: `evt-${suffix}-expired`, paymentId: `pay-expired-${suffix}`, reference: created.code, type: 'payment.approved', status: 'APPROVED', amount: '110.00', currency: 'BRL', payloadHash: hash('expired-event') })).resolves.toEqual({ latePayment: true })
     expect((await admin.query({ text: `SELECT estoque,estoque_reservado FROM app.produto_variantes WHERE id=$1`, values: [expiryVariantId] })).rows[0]).toEqual({ estoque: 1, estoque_reservado: 0 })
   })
 
@@ -111,7 +111,7 @@ describe('orders, stock and payment with isolated PostgreSQL', () => {
   it('confirms stock once from an authenticated normalized event and ignores its retry', async () => {
     const order = await admin.query({ text: `SELECT id FROM app.pedidos WHERE codigo_publico=$1`, values: [winner.code] })
     await admin.query({ text: `INSERT INTO app.pagamentos(pedido_id,provedor,gateway_payment_id,idempotency_key,status,metodo,valor) VALUES($1,'sandbox',$2,$3,'PENDING','PIX',110)`, values: [order.rows[0].id, `pay-${suffix}`, `payment-${suffix}`] })
-    const event = { provider: 'sandbox', eventId: `evt-${suffix}-1`, paymentId: `pay-${suffix}`, type: 'payment.approved', status: 'APPROVED', payloadHash: hash('event') }
+    const event = { provider: 'sandbox', eventId: `evt-${suffix}-1`, paymentId: `pay-${suffix}`, reference: winner.code, type: 'payment.approved', status: 'APPROVED', amount: '110.00', currency: 'BRL', payloadHash: hash('event') }
     await expect(paymentRepo.processWebhook(event)).resolves.toEqual({ approved: true })
     await expect(paymentRepo.processWebhook(event)).resolves.toEqual({ duplicate: true })
     const state = await admin.query({ text: `SELECT p.status,v.estoque,v.estoque_reservado FROM app.pedidos p JOIN app.pedido_itens i ON i.pedido_id=p.id JOIN app.produto_variantes v ON v.id=i.variante_id WHERE p.id=$1`, values: [order.rows[0].id] })

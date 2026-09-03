@@ -37,6 +37,7 @@ export function createCartService(repository = cartRepository) {
           attributes: row.atributos ?? {},
           image: row.imagem_url ? { url: row.imagem_url, alt: row.imagem_alt } : null,
           weightGrams: row.peso_gramas == null ? null : Number(row.peso_gramas),
+          dimensionsCm: row.largura_cm == null || row.altura_cm == null || row.comprimento_cm == null ? null : { width: Number(row.largura_cm), height: Number(row.altura_cm), length: Number(row.comprimento_cm) },
           unitPrice: centsToDecimal(unitPriceCents),
           quantity,
           availableStock,

@@ -1,6 +1,6 @@
 # PostgreSQL manual
 
-O banco usa SQL manual e `pg`, sem ORM. Os 26 objetos de negócio existentes continuam definidos pelos scripts históricos `database.sql`, `tables.sql`, `indexes.sql` e `seed.sql`. A partir da baseline de 08/08/2026, toda evolução deve ser feita em `migrations/`.
+O banco usa SQL manual e `pg`, sem ORM. Os 26 objetos da baseline continuam definidos pelos scripts históricos; migrations incrementais adicionam contas de clientes, outbox de e-mail e solicitações de privacidade, totalizando 30 tabelas. Toda evolução posterior deve ser feita em `migrations/`.
 
 ## Estrutura
 
