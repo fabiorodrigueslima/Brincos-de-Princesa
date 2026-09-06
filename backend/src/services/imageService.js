@@ -32,12 +32,21 @@ export const imageService = {
         productId,
         alt,
         mime,
-        key,
+        key: stored.providerAssetId ?? key,
         url: stored.url,
         primary,
       });
     } catch (error) {
-      await storageProvider.delete(key);
+      const cleanupKey = stored.providerAssetId ?? key;
+      try {
+        await storageProvider.delete(cleanupKey);
+      } catch (cleanupError) {
+        console.error({
+          event: "IMAGE_UPLOAD_COMPENSATION_FAILED",
+          providerAssetId: cleanupKey,
+          errorCode: cleanupError.code ?? "STORAGE_PROVIDER_ERROR",
+        });
+      }
       throw error;
     }
   },

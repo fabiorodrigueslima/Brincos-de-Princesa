@@ -20,7 +20,7 @@ export function createPaymentRepository(runTransaction = transaction) {
         if (String(order.rows[0].total) !== String(input.amount))
           throw new Error("PAYMENT_AMOUNT_INVARIANT_VIOLATION");
         const result = await client.query({
-          text: `INSERT INTO app.pagamentos(pedido_id,provedor,gateway_preference_id,idempotency_key,status,metodo,valor) VALUES($1,$2,$3,$4,'PENDING',$5,$6) ON CONFLICT(idempotency_key) DO UPDATE SET idempotency_key=EXCLUDED.idempotency_key RETURNING status,metodo,valor,gateway_payment_id,gateway_preference_id`,
+          text: `INSERT INTO app.pagamentos(pedido_id,provedor,gateway_preference_id,idempotency_key,status,metodo,valor) VALUES($1,$2,$3,$4,'PENDING',$5,$6) ON CONFLICT(idempotency_key) DO NOTHING RETURNING status,metodo,valor,gateway_payment_id,gateway_preference_id`,
           values: [
             order.rows[0].id,
             input.provider,
@@ -30,7 +30,11 @@ export function createPaymentRepository(runTransaction = transaction) {
             input.amount,
           ],
         });
-        return result.rows[0];
+        if (result.rowCount) return result.rows[0];
+        const existing = await client.query({ text: `SELECT pa.status,pa.metodo,pa.valor,pa.gateway_payment_id,pa.gateway_preference_id,pa.pedido_id,pa.provedor FROM app.pagamentos pa WHERE pa.idempotency_key=$1 FOR UPDATE`, values: [input.idempotencyKey] });
+        const row = existing.rows[0];
+        if (!row || String(row.pedido_id) !== String(order.rows[0].id) || row.provedor !== input.provider || row.metodo !== input.method || String(row.valor) !== String(input.amount)) throw new AppError(409,"IDEMPOTENCY_KEY_REUSED","A chave de idempotência já foi usada com outros dados.");
+        return row;
       });
     },
 
@@ -156,6 +160,8 @@ export function createPaymentRepository(runTransaction = transaction) {
         }
         if (event.status === "CHARGEBACK" && state.status !== "CHARGEBACK") {
           await client.query({ text: `UPDATE app.pagamentos SET status='CHARGEBACK' WHERE id=$1`, values: [state.id] });
+          const changed = await client.query({ text: `UPDATE app.pedidos SET status='CHARGEBACK' WHERE id=$1 AND status <> 'CHARGEBACK' RETURNING status`, values: [state.pedido_id] });
+          if (changed.rowCount) await client.query({ text: `INSERT INTO app.pedido_status_historico(pedido_id,status_novo,motivo,origem) VALUES($1,'CHARGEBACK','Contestação confirmada pelo provedor; requer revisão operacional','WEBHOOK')`, values: [state.pedido_id] });
         }
         await finishEvent(client, inserted.rows[0].id, "PROCESSED");
         return { processed: true };

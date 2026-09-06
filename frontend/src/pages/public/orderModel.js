@@ -7,6 +7,7 @@ export const orderStatusLabel = {
   SHIPPED: 'Enviado',
   DELIVERED: 'Entregue',
   REFUNDED: 'Reembolsado',
+  CHARGEBACK: 'Pagamento contestado — em análise',
 }
 
 export const canPollOrder = (status) => status === 'PENDING_PAYMENT'

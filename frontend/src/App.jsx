@@ -18,12 +18,15 @@ import { CoursePage } from "./pages/public/CoursePage.jsx";
 import { CheckoutPage } from "./pages/public/CheckoutPage.jsx";
 import { CustomerAccountPage } from "./pages/public/CustomerAccountPage.jsx";
 import { CustomerAuthPage } from "./pages/public/CustomerAuthPage.jsx";
+import { OrderPage } from "./pages/public/OrderPage.jsx";
+import { AdminPage } from "./pages/admin/AdminPage.jsx";
 import "./styles/global.css";
 
 export default function App() {
   return (
     <BrowserRouter>
       <Routes>
+        <Route path="admin" element={<AdminPage />} />
         <Route element={<SiteLayout />}>
           <Route index element={<HomePage />} />
           <Route path="inicio" element={<Navigate to="/" replace />} />
@@ -74,6 +77,7 @@ export default function App() {
           <Route path="produto/:slug" element={<ProductPage />} />
           <Route path="carrinho" element={<CartPage />} />
           <Route path="checkout" element={<CheckoutPage />} />
+          <Route path="pedido/:code" element={<OrderPage />} />
           <Route path="login" element={<CustomerAuthPage mode="login" />} />
           <Route path="cadastro" element={<CustomerAuthPage mode="register" />} />
           <Route path="recuperar-senha" element={<CustomerAuthPage mode="forgot" />} />

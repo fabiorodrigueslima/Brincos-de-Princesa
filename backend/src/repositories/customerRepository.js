@@ -166,6 +166,11 @@ export const customerRepository = {
       })
     ).rows;
   },
+  async createPrivacyRequest(customerId, type) {
+    const result = await query({ text: `INSERT INTO app.privacy_requests(cliente_id,tipo) VALUES($1,$2) ON CONFLICT DO NOTHING RETURNING id,tipo,status,criado_em`, values: [customerId,type] });
+    if (!result.rowCount) throw new AppError(409,"PRIVACY_REQUEST_EXISTS","Já existe uma solicitação deste tipo em análise.");
+    return result.rows[0];
+  },
   async addAddress(id, value) {
     return transaction(async (client) => {
       if (value.primary)

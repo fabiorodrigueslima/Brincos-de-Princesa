@@ -6,6 +6,7 @@ import {
 } from "../controllers/orderController.js";
 import { validateRequest } from "../middlewares/validateRequest.js";
 import { requireCustomer } from "../middlewares/customerSecurity.js";
+import { sensitiveNoStore } from "../middlewares/adminSecurity.js";
 import {
   orderMutationRateLimit,
   orderStatusRateLimit,
@@ -18,6 +19,7 @@ import {
 } from "../validators/orderValidators.js";
 
 export const orderRouter = Router();
+orderRouter.use(sensitiveNoStore);
 orderRouter.post(
   "/",
   requireCustomer,

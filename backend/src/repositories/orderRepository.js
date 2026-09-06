@@ -78,20 +78,6 @@ export function createOrderRepository(runTransaction = transaction) {
             "CUSTOMER_AUTH_REQUIRED",
             "Entre na sua conta para finalizar a compra.",
           );
-        await client.query({
-          text: `INSERT INTO app.enderecos(cliente_id,cep,rua,numero,complemento,bairro,cidade,uf,destinatario,principal) VALUES($1,$2,$3,$4,NULLIF($5,''),$6,$7,$8,$9,TRUE)`,
-          values: [
-            customer.rows[0].id,
-            input.address.postalCode,
-            input.address.street,
-            input.address.number,
-            input.address.complement,
-            input.address.neighborhood,
-            input.address.city,
-            input.address.state,
-            input.customer.name,
-          ],
-        });
         const order = await client.query({
           text: `INSERT INTO app.pedidos(codigo_publico,access_token_hash,cliente_id,status,email_cliente,nome_cliente,telefone_cliente,endereco_entrega,subtotal,desconto,frete,total,frete_metodo,frete_transportadora,frete_prazo_dias) VALUES($1,$2,$3,'PENDING_PAYMENT',$4,$5,$6,$7,$8,0,$9,$10,$11,$12,$13) RETURNING id,codigo_publico,status,subtotal,frete,total,criado_em`,
           values: [

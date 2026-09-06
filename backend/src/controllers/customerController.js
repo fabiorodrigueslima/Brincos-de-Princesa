@@ -70,14 +70,12 @@ export async function orders(req, res) {
   res.json({ data: await customerRepository.orders(req.customer.cliente_id) });
 }
 export async function addAddress(req, res) {
-  res
-    .status(201)
-    .json({
-      data: await customerRepository.addAddress(
-        req.customer.cliente_id,
-        req.validated.body,
-      ),
-    });
+  res.status(201).json({
+    data: await customerRepository.addAddress(
+      req.customer.cliente_id,
+      req.validated.body,
+    ),
+  });
 }
 export async function updateAddress(req, res) {
   res.json({
@@ -94,4 +92,14 @@ export async function deleteAddress(req, res) {
     req.validated.params.id,
   );
   res.status(204).end();
+}
+export async function privacyRequest(req, res) {
+  res
+    .status(201)
+    .json({
+      data: await customerRepository.createPrivacyRequest(
+        req.customer.cliente_id,
+        req.validated.body.type,
+      ),
+    });
 }

@@ -18,7 +18,7 @@ export const adminRepository = {
   },
   async createProduct(value) {
     const result = await query({
-      text: `INSERT INTO app.produtos(nome,slug,descricao,materiais,medidas,peso_gramas,cuidados,prazo_producao_dias,categoria_id,status,publicado_em) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,CASE WHEN $10='ACTIVE' THEN now() ELSE NULL END) RETURNING id`,
+      text: `INSERT INTO app.produtos(nome,slug,descricao,materiais,medidas,peso_gramas,cuidados,prazo_producao_dias,categoria_id,status,publicado_em) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10::varchar,CASE WHEN $10::varchar='ACTIVE' THEN now() ELSE NULL END) RETURNING id`,
       values: [
         value.name,
         value.slug,
@@ -36,7 +36,7 @@ export const adminRepository = {
   },
   async updateProduct(id, value) {
     const result = await query({
-      text: `UPDATE app.produtos SET nome=$1,slug=$2,descricao=$3,materiais=$4,medidas=$5,peso_gramas=$6,cuidados=$7,prazo_producao_dias=$8,categoria_id=$9,status=$10,publicado_em=CASE WHEN $10='ACTIVE' THEN COALESCE(publicado_em,now()) ELSE publicado_em END WHERE id=$11 RETURNING id`,
+      text: `UPDATE app.produtos SET nome=$1,slug=$2,descricao=$3,materiais=$4,medidas=$5,peso_gramas=$6,cuidados=$7,prazo_producao_dias=$8,categoria_id=$9,status=$10::varchar,publicado_em=CASE WHEN $10::varchar='ACTIVE' THEN COALESCE(publicado_em,now()) ELSE publicado_em END WHERE id=$11 RETURNING id`,
       values: [
         value.name,
         value.slug,
@@ -67,6 +67,21 @@ export const adminRepository = {
         value.attributes,
       ],
     });
+    return result.rows[0];
+  },
+  async updateVariant(id, value) {
+    const result = await query({ text: `UPDATE app.produto_variantes SET nome=$1,sku=$2,preco=$3,preco_promocional=$4,ativa=$5,atributos=$6,peso_gramas=$7,largura_cm=$8,altura_cm=$9,comprimento_cm=$10 WHERE id=$11 RETURNING id`, values: [value.name,value.sku,value.price,value.salePrice??null,value.active,value.attributes,value.weightGrams??null,value.widthCm??null,value.heightCm??null,value.lengthCm??null,id] });
+    if (!result.rowCount) throw new AppError(404, "VARIANT_NOT_FOUND", "Variante não encontrada.");
+    return result.rows[0];
+  },
+  async archiveProduct(id) {
+    const result = await query({ text: `UPDATE app.produtos SET status='ARCHIVED' WHERE id=$1 RETURNING id,status`, values: [id] });
+    if (!result.rowCount) throw new AppError(404, "PRODUCT_NOT_FOUND", "Produto não encontrado.");
+    return result.rows[0];
+  },
+  async deactivateVariant(id) {
+    const result = await query({ text: `UPDATE app.produto_variantes SET ativa=FALSE WHERE id=$1 RETURNING id,ativa`, values: [id] });
+    if (!result.rowCount) throw new AppError(404, "VARIANT_NOT_FOUND", "Variante não encontrada.");
     return result.rows[0];
   },
   async stock() {
@@ -151,8 +166,9 @@ export const adminRepository = {
   },
   async updateOrderStatus(id, status, reason, adminId) {
     const transitions = {
-      PAID: ["IN_PRODUCTION", "CANCELLED"],
-      IN_PRODUCTION: ["READY_TO_SHIP", "CANCELLED"],
+      PENDING_PAYMENT: ["CANCELLED"],
+      PAID: ["IN_PRODUCTION"],
+      IN_PRODUCTION: ["READY_TO_SHIP"],
       READY_TO_SHIP: ["SHIPPED"],
       SHIPPED: ["DELIVERED"],
     };
@@ -169,6 +185,15 @@ export const adminRepository = {
           "INVALID_STATUS_TRANSITION",
           "Transição de status inválida.",
         );
+      if (current.rows[0].status === "PENDING_PAYMENT" && status === "CANCELLED") {
+        const reservations = await client.query({ text: `SELECT id,variante_id,quantidade FROM app.reservas_estoque WHERE pedido_id=$1 AND status='ACTIVE' ORDER BY variante_id FOR UPDATE`, values: [id] });
+        for (const reservation of reservations.rows) {
+          const stock = await client.query({ text: `UPDATE app.produto_variantes SET estoque_reservado=estoque_reservado-$1 WHERE id=$2 AND estoque_reservado >= $1 RETURNING estoque-estoque_reservado saldo`, values: [reservation.quantidade,reservation.variante_id] });
+          if (!stock.rowCount) throw new Error("RESERVATION_INVARIANT_VIOLATION");
+          await client.query({ text: `UPDATE app.reservas_estoque SET status='RELEASED' WHERE id=$1`, values: [reservation.id] });
+          await client.query({ text: `INSERT INTO app.movimentos_estoque(variante_id,pedido_id,admin_id,tipo,quantidade,saldo_apos,motivo) VALUES($1,$2,$3,'RELEASE',$4,$5,$6)`, values: [reservation.variante_id,id,adminId,-reservation.quantidade,stock.rows[0].saldo,reason] });
+        }
+      }
       await client.query({
         text: `UPDATE app.pedidos SET status=$1 WHERE id=$2`,
         values: [status, id],
@@ -194,12 +219,70 @@ export const adminRepository = {
       )
     ).rows;
   },
+  async createCategory(value) {
+    return (await query({ text: `INSERT INTO app.categorias(nome,slug,descricao,ativa,ordem) VALUES($1,$2,$3,$4,$5) RETURNING id`, values: [value.name,value.slug,value.description??null,value.active,value.order] })).rows[0];
+  },
+  async updateCategory(id, value) {
+    const result=await query({ text: `UPDATE app.categorias SET nome=$1,slug=$2,descricao=$3,ativa=$4,ordem=$5 WHERE id=$6 RETURNING id`, values:[value.name,value.slug,value.description??null,value.active,value.order,id] });
+    if(!result.rowCount) throw new AppError(404,"CATEGORY_NOT_FOUND","Categoria não encontrada.");
+    return result.rows[0];
+  },
+  async deactivateCategory(id) {
+    const result=await query({ text:`UPDATE app.categorias SET ativa=FALSE WHERE id=$1 RETURNING id,ativa`,values:[id] });
+    if(!result.rowCount) throw new AppError(404,"CATEGORY_NOT_FOUND","Categoria não encontrada.");
+    return result.rows[0];
+  },
   async collections() {
     return (
       await query(
         `SELECT id,nome,slug,ativa,destaque FROM app.colecoes ORDER BY nome`,
       )
     ).rows;
+  },
+  async createCollection(value) {
+    return (await query({ text:`INSERT INTO app.colecoes(nome,slug,descricao,ativa,destaque,publicada_em) VALUES($1,$2,$3,$4,$5,CASE WHEN $4::boolean THEN now() ELSE NULL END) RETURNING id`,values:[value.name,value.slug,value.description??null,value.active,value.featured] })).rows[0];
+  },
+  async updateCollection(id,value) {
+    const result=await query({ text:`UPDATE app.colecoes SET nome=$1,slug=$2,descricao=$3,ativa=$4,destaque=$5,publicada_em=CASE WHEN $4::boolean THEN COALESCE(publicada_em,now()) ELSE publicada_em END WHERE id=$6 RETURNING id`,values:[value.name,value.slug,value.description??null,value.active,value.featured,id] });
+    if(!result.rowCount) throw new AppError(404,"COLLECTION_NOT_FOUND","Coleção não encontrada.");
+    return result.rows[0];
+  },
+  async deactivateCollection(id) {
+    const result=await query({ text:`UPDATE app.colecoes SET ativa=FALSE WHERE id=$1 RETURNING id,ativa`,values:[id] });
+    if(!result.rowCount) throw new AppError(404,"COLLECTION_NOT_FOUND","Coleção não encontrada.");
+    return result.rows[0];
+  },
+  async addImage({ productId, alt, mime, key, url, primary }) {
+    return transaction(async (client) => {
+      const product = await client.query({
+        text: `SELECT id FROM app.produtos WHERE id=$1 FOR UPDATE`,
+        values: [productId],
+      });
+      if (!product.rowCount)
+        throw new AppError(404, "PRODUCT_NOT_FOUND", "Produto não encontrado.");
+      if (primary)
+        await client.query({
+          text: `UPDATE app.produto_imagens SET principal=FALSE WHERE produto_id=$1`,
+          values: [productId],
+        });
+      const nextOrder = await client.query({
+        text: `SELECT COALESCE(MAX(ordem), -1) + 1 AS ordem FROM app.produto_imagens WHERE produto_id=$1`,
+        values: [productId],
+      });
+      const result = await client.query({
+        text: `INSERT INTO app.produto_imagens(produto_id,url,alt_text,mime_type,ordem,principal,storage_key) VALUES($1,$2,$3,$4,$5,$6,$7) RETURNING id,produto_id,url,alt_text,mime_type,ordem,principal,storage_key`,
+        values: [productId, url, alt, mime ?? null, nextOrder.rows[0].ordem, primary, key],
+      });
+      return result.rows[0];
+    });
+  },
+  async deleteImage(id) {
+    const result = await query({
+      text: `DELETE FROM app.produto_imagens WHERE id=$1 RETURNING storage_key`,
+      values: [id],
+    });
+    if (!result.rowCount) throw new AppError(404, "IMAGE_NOT_FOUND", "Imagem não encontrada.");
+    return result.rows[0];
   },
   async settings() {
     return (

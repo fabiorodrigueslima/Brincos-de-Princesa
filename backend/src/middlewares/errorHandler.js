@@ -1,3 +1,5 @@
+import { env } from "../config/env.js";
+
 export function errorHandler(error, req, res, _next) {
   void _next
   const isCorsError = error.message === 'Origem não autorizada'
@@ -13,7 +15,14 @@ export function errorHandler(error, req, res, _next) {
         : 'Não foi possível concluir a solicitação.'
 
   if (status === 500) {
-    console.error({ event: 'UNHANDLED_ERROR', requestId: req.requestId, errorName: error.name })
+    console.error({
+      event: 'UNHANDLED_ERROR',
+      requestId: req.requestId,
+      errorName: error.name,
+      ...(env.NODE_ENV === 'development'
+        ? { errorMessage: error.message, errorStack: error.stack }
+        : {}),
+    })
   }
 
   res.status(status).json({

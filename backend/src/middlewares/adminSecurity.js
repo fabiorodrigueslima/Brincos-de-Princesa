@@ -4,7 +4,8 @@ import { AppError } from "../utils/AppError.js";
 
 export const ADMIN_COOKIE = "__Host-bdp_admin";
 export function sensitiveNoStore(_req, res, next) {
-  res.setHeader("Cache-Control", "no-store");
+  res.setHeader("Cache-Control", "no-store, private");
+  res.setHeader("Pragma", "no-cache");
   return next();
 }
 

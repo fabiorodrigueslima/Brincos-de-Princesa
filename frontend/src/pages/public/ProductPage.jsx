@@ -151,6 +151,25 @@ export function ProductPage() {
         }
         image={primaryImage?.url}
         type="product"
+        structuredData={{
+          "@context": "https://schema.org",
+          "@type": "Product",
+          name: product.name,
+          description: product.description,
+          image: product.images.map((item) => item.url),
+          sku: selectedVariant?.sku,
+          offers: selectedVariant
+            ? {
+                "@type": "Offer",
+                priceCurrency: "BRL",
+                price: String(price),
+                availability: selectedVariant.inStock
+                  ? "https://schema.org/InStock"
+                  : "https://schema.org/OutOfStock",
+                url: window.location.href,
+              }
+            : undefined,
+        }}
       />
       <nav
         className="product-breadcrumb container"

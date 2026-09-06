@@ -12,6 +12,7 @@ import {
   register,
   reset,
   updateAddress,
+  privacyRequest,
 } from "../controllers/customerController.js";
 import {
   requireCustomer,
@@ -29,6 +30,7 @@ import {
   customerProfileSchema,
   customerRegisterSchema,
   customerResetSchema,
+  privacyRequestSchema,
 } from "../validators/customerValidators.js";
 
 export const customerRouter = Router();
@@ -92,3 +94,4 @@ customerRouter.delete(
   validateRequest(customerIdParamsSchema, "params"),
   deleteAddress,
 );
+customerRouter.post("/privacy-requests",customerAuthRateLimit,requireCustomerCsrf,validateRequest(privacyRequestSchema,"body"),privacyRequest);

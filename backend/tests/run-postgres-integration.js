@@ -145,6 +145,7 @@ const result = spawnSync(
     'tests/courses-postgres.integration.test.js',
     'tests/orders-postgres.integration.test.js',
     'tests/admin-postgres.integration.test.js',
+    'tests/customer-privacy-postgres.integration.test.js',
   ],
   commonOptions,
 )

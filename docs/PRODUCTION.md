@@ -24,11 +24,11 @@ Cadastre `https://API/api/v1/webhooks/payments/mercado-pago`, habilite eventos d
 
 ## 6. Frete
 
-Para operação inicial, use `SHIPPING_PROVIDER=configurable`, taxa fixa, limite de frete grátis, UFs permitidas e retirada local conforme a política comercial. Antes de usar preço real, confirme CEP de origem, embalagem, pesos e dimensões. Uma futura transportadora deve entrar como novo provider, sem alterar o checkout.
+Em produção, use `SHIPPING_PROVIDER=superfrete` com token, CEP de origem e serviços contratados da cliente. Mantenha `configurable` somente para desenvolvimento/testes e cenários de diagnóstico. Antes de usar preço real, confirme embalagem, pesos, dimensões e uma cotação em sandbox da SuperFrete. O código ainda depende de credencial externa e homologação; não habilite o provider sem esses dados.
 
 ## 7. Storage
 
-O backend possui upload administrativo com validação de MIME real, limite de 5 MB e nomes aleatórios. Em desenvolvimento, `STORAGE_PROVIDER=local` grava em `backend/uploads`; esse modo é recusado em produção. Para produção, configure `STORAGE_PROVIDER=http`, endpoint privado, token e URL pública HTTPS de um storage/CDN compatível. Defina ainda política de dimensões, exclusão, backup e retenção no serviço escolhido.
+O backend possui upload administrativo com validação de MIME real, limite de 5 MB e nomes aleatórios. Em desenvolvimento/testes, `STORAGE_PROVIDER=local` grava em `backend/uploads` e `disabled` pode ser usado quando o fluxo de upload não participa do teste. Em produção, somente `STORAGE_PROVIDER=cloudinary` é aceito; `local`, `http` e `disabled` fazem a aplicação falhar antes de aceitar tráfego. Configure `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY` e `CLOUDINARY_API_SECRET` somente no secret manager. O backend assina o upload, persiste a URL segura e o `public_id`, e exclui o asset remoto quando a imagem é removida. Defina ainda política de transformações, backup, retenção e invalidação de CDN no Cloudinary.
 
 ## 8. E-mail
 

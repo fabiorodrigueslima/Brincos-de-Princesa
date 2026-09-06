@@ -37,10 +37,13 @@ export async function createPayment(req, res) {
     });
 }
 export async function paymentWebhook(req, res) {
+  const dataId = req.query?.data?.id ?? req.query?.["data.id"] ?? req.body?.data?.id ?? req.body?.id;
   res.json({
     data: await paymentService.webhook({
       providerName: req.validated.params.provider,
       signature: req.get("X-Webhook-Signature"),
+      requestId: req.get("X-Request-Id"),
+      dataId: dataId == null ? undefined : String(dataId),
       payload: req.body,
     }),
   });

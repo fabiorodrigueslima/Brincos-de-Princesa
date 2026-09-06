@@ -1012,7 +1012,9 @@ main {
     place-items: center;
   }
   .store-shortcut {
-    display: none;
+    min-width: 44px;
+    min-height: 44px;
+    justify-content: center;
   }
   .header-actions {
     grid-column: 2;

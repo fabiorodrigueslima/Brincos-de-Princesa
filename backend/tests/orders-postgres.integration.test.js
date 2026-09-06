@@ -7,7 +7,7 @@ import { createPaymentRepository } from '../src/repositories/paymentRepository.j
 const { Client } = pg
 const url = process.env.TEST_DATABASE_ADMIN_URL
 const suffix = `${process.pid}-${Date.now()}`
-let admin, productId, variantId, expiryVariantId, highVariantId, winner, winnerInput, orderRepo, paymentRepo
+let admin, customerId, productId, variantId, expiryVariantId, highVariantId, winner, winnerInput, orderRepo, paymentRepo
 const hash = (value) => createHash('sha256').update(value).digest('hex')
 
 async function tx(work) {
@@ -19,13 +19,14 @@ async function tx(work) {
 
 function input(key, code, email = `${code.toLowerCase()}@example.com`) {
   const accessToken = `token-${code}`
-  return { keyHash: hash(key), requestHash: hash(`request-${key}`), publicCode: code, accessToken, accessTokenHash: hash(accessToken), customer: { name: 'Cliente Teste', email, phone: '61999999999' }, address: { postalCode: '72000000', street: 'Rua Teste', number: 'S/N', complement: '', neighborhood: 'Centro', city: 'Brasília', state: 'DF' }, quote: { subtotal: '100.00', shipping: '10.00', total: '110.00', items: [{ variantId, quantity: 1, unitPrice: '100.00', subtotal: '100.00' }] } }
+  return { keyHash: hash(key), requestHash: hash(`request-${key}`), publicCode: code, accessToken, accessTokenHash: hash(accessToken), customerId, customer: { name: 'Cliente Teste', email, phone: '61999999999' }, address: { postalCode: '72000000', street: 'Rua Teste', number: 'S/N', complement: '', neighborhood: 'Centro', city: 'Brasília', state: 'DF' }, quote: { subtotal: '100.00', shipping: '10.00', total: '110.00', selectedShipping: { service: 'Teste', carrier: null, estimatedDays: 7 }, items: [{ variantId, quantity: 1, unitPrice: '100.00', subtotal: '100.00' }] } }
 }
 
 describe('orders, stock and payment with isolated PostgreSQL', () => {
   beforeAll(async () => {
     if (!url || !new URL(url).pathname.slice(1).endsWith('_test')) throw new Error('Pedidos exigem banco _test')
     admin = new Client({ connectionString: url }); await admin.connect()
+    customerId = (await admin.query({ text: `INSERT INTO app.clientes(email,nome,sobrenome,telefone,password_hash) VALUES($1,'Cliente Teste','', '61999999999','test-hash') RETURNING id`, values: [`orders-${suffix}@example.com`] })).rows[0].id
     const category = await admin.query("SELECT id FROM app.categorias WHERE slug='brincos'")
     productId = (await admin.query({ text: `INSERT INTO app.produtos(categoria_id,nome,slug,descricao,status) VALUES($1,$2,$3,'Teste transacional','ACTIVE') RETURNING id`, values: [category.rows[0].id, 'Produto concorrência', `produto-concorrencia-${suffix}`] })).rows[0].id
     variantId = Number((await admin.query({ text: `INSERT INTO app.produto_variantes(produto_id,sku,nome,preco,estoque,ativa) VALUES($1,$2,'Única',100,1,TRUE) RETURNING id`, values: [productId, `CONC-${suffix}`] })).rows[0].id)
@@ -45,7 +46,8 @@ describe('orders, stock and payment with isolated PostgreSQL', () => {
     await admin.query(`DELETE FROM app.idempotency_keys WHERE escopo='CREATE_ORDER' AND recurso_id IN (SELECT id::text FROM app.pedidos WHERE codigo_publico LIKE 'BP-7%')`)
     const customers = await admin.query(`SELECT cliente_id FROM app.pedidos WHERE codigo_publico LIKE 'BP-7%'`)
     await admin.query(`DELETE FROM app.pedidos WHERE codigo_publico LIKE 'BP-7%'`)
-    for (const row of customers.rows) { await admin.query({ text: `DELETE FROM app.enderecos WHERE cliente_id=$1`, values: [row.cliente_id] }); await admin.query({ text: `DELETE FROM app.clientes WHERE id=$1`, values: [row.cliente_id] }) }
+    for (const row of customers.rows) await admin.query({ text: `DELETE FROM app.enderecos WHERE cliente_id=$1`, values: [row.cliente_id] })
+    await admin.query({ text: `DELETE FROM app.clientes WHERE id=$1`, values: [customerId] })
     await admin.query({ text: `DELETE FROM app.produto_variantes WHERE id=ANY($1)`, values: [[variantId, expiryVariantId, highVariantId]] }); await admin.query({ text: `DELETE FROM app.produtos WHERE id=$1`, values: [productId] }); await admin.end()
   })
 
@@ -57,7 +59,7 @@ describe('orders, stock and payment with isolated PostgreSQL', () => {
 
   it('rolls back customer and idempotency data after an intermediate database failure', async () => {
     const invalid = input(`key-mid-rollback-${suffix}`, 'BP-7000000000000005', `mid-rollback-${suffix}@example.com`)
-    invalid.address.postalCode = 'invalid'
+    invalid.customerId = 2147483647
     await expect(orderRepo.create(invalid)).rejects.toBeTruthy()
     expect((await admin.query({ text: `SELECT count(*)::integer count FROM app.clientes WHERE email=$1`, values: [invalid.customer.email] })).rows[0].count).toBe(0)
     expect((await admin.query({ text: `SELECT count(*)::integer count FROM app.idempotency_keys WHERE chave_hash=$1`, values: [invalid.keyHash] })).rows[0].count).toBe(0)
