@@ -276,6 +276,11 @@ export const adminRepository = {
       return result.rows[0];
     });
   },
+  async findImage(id) {
+    const result = await query('SELECT storage_key FROM app.produto_imagens WHERE id=$1',[id]);
+    if (!result.rowCount) throw new AppError(404,'IMAGE_NOT_FOUND','Imagem não encontrada.');
+    return result.rows[0];
+  },
   async deleteImage(id) {
     const result = await query({
       text: `DELETE FROM app.produto_imagens WHERE id=$1 RETURNING storage_key`,

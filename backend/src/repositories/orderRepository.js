@@ -1,5 +1,7 @@
 import { transaction } from "../config/database.js";
 import { AppError } from "../utils/AppError.js";
+import { createSettingsRepository } from './settingsRepository.js';
+import { createCheckoutAvailabilityService } from '../services/checkoutAvailabilityService.js';
 
 const currentPrice = (row) => String(row.preco_promocional ?? row.preco);
 
@@ -7,6 +9,9 @@ export function createOrderRepository(runTransaction = transaction) {
   return {
     async create(input) {
       return runTransaction(async (client) => {
+        // Hold the shared configuration lock until commit so disabling checkout
+        // cannot race a new order's persistent effects.
+        await createCheckoutAvailabilityService(createSettingsRepository(client.query.bind(client))).assertEnabled({ lock: true });
         const insertedKey = await client.query({
           text: `INSERT INTO app.idempotency_keys(escopo,chave_hash,request_hash,expira_em) VALUES('CREATE_ORDER',$1,$2,now()+interval '24 hours') ON CONFLICT (escopo,chave_hash) DO NOTHING RETURNING id`,
           values: [input.keyHash, input.requestHash],
@@ -188,7 +193,7 @@ export function createOrderRepository(runTransaction = transaction) {
 
 async function releaseExpiredReservations(client) {
   const expired = await client.query(
-    `SELECT r.id,r.pedido_id,r.variante_id,r.quantidade,p.status pedido_status FROM app.reservas_estoque r JOIN app.pedidos p ON p.id=r.pedido_id WHERE r.status='ACTIVE' AND r.expira_em<=now() AND p.status='PENDING_PAYMENT' ORDER BY r.variante_id FOR UPDATE OF r`,
+    `SELECT r.id,r.pedido_id,r.variante_id,r.quantidade,p.status pedido_status FROM app.reservas_estoque r JOIN app.pedidos p ON p.id=r.pedido_id WHERE r.status='ACTIVE' AND r.expira_em<=now() AND p.status='PENDING_PAYMENT' ORDER BY r.pedido_id,r.variante_id FOR UPDATE OF p,r SKIP LOCKED`,
   );
   for (const reservation of expired.rows) {
     const released = await client.query({

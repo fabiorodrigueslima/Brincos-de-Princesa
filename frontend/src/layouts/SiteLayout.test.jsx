@@ -1,3 +1,4 @@
+import { StorefrontContext } from '../context/storefrontContext.js';
 import { readFileSync } from "node:fs";
 import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
@@ -20,7 +21,7 @@ vi.mock("../components/common/ScrollToTop.jsx", () => ({
 }));
 globalThis.React = React;
 
-function renderHeader(itemCount) {
+function renderHeader(itemCount, mode = 'commerce') {
   return renderToStaticMarkup(
     React.createElement(
       MemoryRouter,
@@ -28,13 +29,19 @@ function renderHeader(itemCount) {
       React.createElement(
         CartContext.Provider,
         { value: { getItemCount: () => itemCount } },
-        React.createElement(SiteLayout),
+        React.createElement(StorefrontContext.Provider, { value: { mode, loading: false } }, React.createElement(SiteLayout)),
       ),
     ),
   );
 }
 
 describe("responsive site header", () => {
+  it.each(['catalog', null])('hides cart and customer login when commerce is not enabled (%s)', mode => {
+    const markup = renderHeader(3, mode);
+    expect(markup).not.toContain('href="/carrinho"');
+    expect(markup).not.toContain('href="/login"');
+    expect(markup).toContain('Conheça nosso catálogo');
+  });
   it("renders one persistent cart action beside the mobile menu", () => {
     const markup = renderHeader(0);
     expect(markup.match(/class="store-shortcut"/g)).toHaveLength(1);

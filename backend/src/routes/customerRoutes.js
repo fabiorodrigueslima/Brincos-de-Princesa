@@ -13,6 +13,8 @@ import {
   reset,
   updateAddress,
   privacyRequest,
+  requestActivation,
+  activate,
 } from "../controllers/customerController.js";
 import {
   requireCustomer,
@@ -20,7 +22,7 @@ import {
 } from "../middlewares/customerSecurity.js";
 import { sensitiveNoStore } from "../middlewares/adminSecurity.js";
 import { validateRequest } from "../middlewares/validateRequest.js";
-import { customerAuthRateLimit } from "../security/httpSecurity.js";
+import { customerAuthRateLimit, customerRegistrationRateLimit, customerRecoveryRateLimit } from "../security/httpSecurity.js";
 import {
   customerAddressSchema,
   customerForgotSchema,
@@ -31,13 +33,15 @@ import {
   customerRegisterSchema,
   customerResetSchema,
   privacyRequestSchema,
+  customerActivationRequestSchema,
+  customerActivationSchema,
 } from "../validators/customerValidators.js";
 
 export const customerRouter = Router();
 customerRouter.use(sensitiveNoStore);
 customerRouter.post(
   "/auth/register",
-  customerAuthRateLimit,
+  customerRegistrationRateLimit,
   validateRequest(customerRegisterSchema, "body"),
   register,
 );
@@ -49,7 +53,7 @@ customerRouter.post(
 );
 customerRouter.post(
   "/auth/forgot",
-  customerAuthRateLimit,
+  customerRecoveryRateLimit,
   validateRequest(customerForgotSchema, "body"),
   forgot,
 );
@@ -59,6 +63,8 @@ customerRouter.post(
   validateRequest(customerResetSchema, "body"),
   reset,
 );
+customerRouter.post('/auth/activation/request', customerRecoveryRateLimit, validateRequest(customerActivationRequestSchema, 'body'), requestActivation);
+customerRouter.post('/auth/activation/confirm', customerAuthRateLimit, validateRequest(customerActivationSchema, 'body'), activate);
 customerRouter.use(requireCustomer);
 customerRouter.get("/me", me);
 customerRouter.post("/auth/logout", requireCustomerCsrf, logout);

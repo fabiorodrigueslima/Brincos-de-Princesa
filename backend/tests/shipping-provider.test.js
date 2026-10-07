@@ -87,7 +87,7 @@ describe("SuperFrete shipping provider", () => {
       id: "1",
       service: "PAC",
       carrier: "SuperFrete",
-      price: "22.5",
+      price: "22.50",
       estimatedDays: 8,
     });
   });
@@ -100,5 +100,11 @@ describe("SuperFrete shipping provider", () => {
         items: [{ quantity: 1, weightGrams: null, dimensionsCm: null }],
       }),
     ).rejects.toMatchObject({ code: "SHIPPING_PACKAGE_DATA_MISSING" });
+  });
+
+  it('enforces allowed states before contacting SuperFrete', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch');
+    await expect(createSuperFreteShippingProvider({...superFreteConfig, SHIPPING_ALLOWED_STATES:'SP'}).quote({postalCode:'20040002',state:'RJ',items:[]})).rejects.toMatchObject({code:'SHIPPING_UNAVAILABLE'});
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 });

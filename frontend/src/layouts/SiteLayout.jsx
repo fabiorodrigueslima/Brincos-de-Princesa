@@ -1,3 +1,4 @@
+import { useStorefront } from '../context/storefrontContext.js';
 import { useState } from "react";
 import { Link, Outlet } from "react-router-dom";
 import {
@@ -25,6 +26,7 @@ const navigation = [
 ];
 
 export function SiteLayout() {
+  const { mode } = useStorefront();
   const [menuOpen, setMenuOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
   const { getItemCount } = useCart();
@@ -39,7 +41,7 @@ export function SiteLayout() {
       </a>
       <div className="announcement">
         Biojoias artesanais <span aria-hidden="true">•</span> Feitas à mão{" "}
-        <span aria-hidden="true">•</span> Enviamos para todo o Brasil
+        <span aria-hidden="true">•</span> {mode === 'commerce' ? 'Enviamos para todo o Brasil' : 'Conheça nosso catálogo'}
       </div>
       <header className="site-header">
         <Link
@@ -80,7 +82,7 @@ export function SiteLayout() {
           ))}
         </nav>
 
-        <div className="header-actions">
+        {mode === 'commerce' && <div className="header-actions">
           {!authLoading && (user ? <div className="account-menu">
             <button className="account-trigger" type="button" aria-expanded={accountOpen} aria-controls="customer-account-menu" onClick={() => setAccountOpen((open) => !open)}>
               <img src="/brand/brinco-de-princesa-logo.png" width="36" height="36" alt="" />
@@ -105,7 +107,7 @@ export function SiteLayout() {
               </strong>
             )}
           </Link>
-        </div>
+        </div>}
       </header>
 
       <main id="conteudo-principal">

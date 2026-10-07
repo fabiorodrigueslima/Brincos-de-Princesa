@@ -67,6 +67,8 @@ function resolveConnections() {
     throw new Error('Runtime e administração do PostgreSQL devem usar credenciais diferentes')
   }
 
+  if (!localHosts.has(maintenanceUrl.hostname) && process.env.ALLOW_REMOTE_TEST_DATABASE !== 'true') throw new Error('Admin de testes remoto não autorizado');
+  if (maintenanceUrl.hostname !== runtimeUrl.hostname || maintenanceUrl.port !== runtimeUrl.port) throw new Error('Admin e runtime de testes devem usar a mesma instância');
   const testAdminUrl = new URL(maintenanceUrl)
   testAdminUrl.pathname = `/${databaseName(runtimeUrl)}`
 
@@ -136,19 +138,12 @@ const migrationResult = spawnSync(
 if (migrationResult.error) throw migrationResult.error
 if (migrationResult.status !== 0) process.exit(migrationResult.status ?? 1)
 
-const result = spawnSync(
-  process.execPath,
-  [
-    vitestEntry, 'run', '--no-file-parallelism',
-    'tests/development-seed-postgres.integration.test.js',
-    'tests/catalog-postgres.integration.test.js',
-    'tests/courses-postgres.integration.test.js',
-    'tests/orders-postgres.integration.test.js',
-    'tests/admin-postgres.integration.test.js',
-    'tests/customer-privacy-postgres.integration.test.js',
-  ],
-  commonOptions,
-)
-
-if (result.error) throw result.error
-process.exitCode = result.status ?? 1
+for (const file of [
+ 'development-seed-postgres.integration.test.js','catalog-postgres.integration.test.js','courses-postgres.integration.test.js',
+ 'orders-postgres.integration.test.js','runtime-postgres.integration.test.js','admin-postgres.integration.test.js',
+ 'customer-privacy-postgres.integration.test.js','a05-a06-postgres.integration.test.js','production-smoke-postgres.integration.test.js'
+]) {
+ const result=spawnSync(process.execPath,[vitestEntry,'run','tests/'+file],commonOptions);
+ if(result.error)throw result.error;
+ if(result.status!==0){process.exitCode=result.status??1;break;}
+}

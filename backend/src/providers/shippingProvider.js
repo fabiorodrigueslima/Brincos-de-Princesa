@@ -1,7 +1,7 @@
 import { env } from "../config/env.js";
 import { AppError } from "../utils/AppError.js";
 
-const cents = (value) => Math.round(Number(value) * 100);
+import { toCents as cents } from '../utils/money.js';
 const decimal = (value) => `${Math.floor(value / 100)}.${String(value % 100).padStart(2, "0")}`;
 const normalizePostalCode = (postalCode) => String(postalCode ?? "").replace(/\D/g, "");
 
@@ -33,11 +33,13 @@ export function createSuperFreteShippingProvider(config = env) {
 
   return {
     name: "superfrete",
-    async quote({ postalCode, state, items = [] }) {
+    async quote({ postalCode, state, subtotal, items = [] }) {
       ensureConfig();
       const normalizedPostalCode = normalizePostalCode(postalCode);
       if (!/^\d{8}$/.test(normalizedPostalCode)) throw new AppError(400, "POSTAL_CODE_INVALID", "CEP inválido.");
       if (state && !/^[A-Z]{2}$/.test(String(state).trim().toUpperCase())) throw new AppError(422, "SHIPPING_UNAVAILABLE", "Estado inválido para o frete.");
+      const allowedStates = String(config.SHIPPING_ALLOWED_STATES || '').split(',').map(value => value.trim().toUpperCase()).filter(Boolean);
+      if (allowedStates.length && !allowedStates.includes(String(state).trim().toUpperCase())) throw new AppError(422, 'SHIPPING_UNAVAILABLE', 'Entrega indisponível para esta região.');
       const physicalItems = items.filter((item) => item.quantity > 0);
       if (physicalItems.some((item) => !item.weightGrams || !item.dimensionsCm)) {
         throw new AppError(422, "SHIPPING_PACKAGE_DATA_MISSING", "Informe peso e dimensões dos produtos para calcular o frete.");
@@ -69,14 +71,23 @@ export function createSuperFreteShippingProvider(config = env) {
       }
       const payload = await response.json().catch(() => ({}));
       const options = Array.isArray(payload) ? payload : Array.isArray(payload.options) ? payload.options : [];
-      if (!options.length) throw new AppError(502, "SUPERFRETE_QUOTE_EMPTY", "A SuperFrete não retornou opções válidas.");
-      return options.map((option) => ({
+      const validOptions = options.filter(option => !option.error && services.includes(String(option.id ?? option.service ?? option.code)));
+      if (!validOptions.length) throw new AppError(502, "SUPERFRETE_QUOTE_EMPTY", "A SuperFrete não retornou opções válidas.");
+      const quoted = validOptions.map(option => {
+        const price = option.price ?? option.value;
+        const days = Number(option.delivery_time ?? option.estimatedDays ?? option.deliveryDays);
+        try { cents(price); } catch { throw new AppError(502,'SUPERFRETE_QUOTE_INVALID','Preço de frete inválido.'); }
+        if (!Number.isInteger(days) || days < 0 || days > 365) throw new AppError(502,'SUPERFRETE_QUOTE_INVALID','Prazo de frete inválido.');
+        return ({
         id: String(option.id ?? option.service ?? option.code),
         service: String(option.name ?? option.service ?? "SuperFrete"),
         carrier: String(option.company?.name ?? option.carrier ?? "SuperFrete"),
-        price: String(option.price ?? option.value ?? "0.00"),
-        estimatedDays: Number(option.delivery_time ?? option.estimatedDays ?? option.deliveryDays ?? 0),
-      }));
+        price: decimal(cents(price)),
+        estimatedDays: days,
+      }); });
+      if (config.SHIPPING_FREE_ABOVE && cents(subtotal) >= cents(config.SHIPPING_FREE_ABOVE)) for (const option of quoted) option.price = '0.00';
+      if (config.SHIPPING_LOCAL_PICKUP) quoted.push({id:'local-pickup',service:config.SHIPPING_LOCAL_PICKUP_LABEL,carrier:null,price:'0.00',estimatedDays:0});
+      return quoted;
     },
   };
 }

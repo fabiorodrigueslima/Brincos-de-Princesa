@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-export const adminLoginSchema = z.object({ email: z.string().trim().email().max(254), password: z.string().min(12).max(200) }).strict()
+export const adminLoginSchema = z.object({ email: z.string().trim().email().max(254), password: z.string().min(8, "A senha deve ter no mínimo 8 caracteres.").max(200) }).strict()
 export const adminListSchema = z.object({ page: z.coerce.number().int().min(1).default(1), limit: z.coerce.number().int().min(1).max(50).default(20), q: z.string().trim().max(100).default(''), status: z.string().trim().max(30).optional() }).strict()
 export const idParamsSchema = z.object({ id: z.coerce.number().int().positive() }).strict()
 const positiveMeasurement=z.number().positive().max(10000).nullable().optional()

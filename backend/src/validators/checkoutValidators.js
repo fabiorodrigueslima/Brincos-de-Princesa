@@ -20,5 +20,6 @@ const address = z.object({
 export const postalCodeParamsSchema = z.object({ postalCode }).strict()
 export const checkoutQuoteSchema = z.object({
   items: z.array(item).min(1).max(50), customer, address,
+  expectedTotal: z.string().regex(/^\d+\.\d{2}$/).optional(),
   shippingOptionId: z.string().trim().min(1).max(120).optional(),
 }).strict()

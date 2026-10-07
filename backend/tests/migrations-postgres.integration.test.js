@@ -73,6 +73,8 @@ describe("PostgreSQL migrations", () => {
       "011_transactional_email_outbox.sql",
       "012_privacy_requests.sql",
       "013_chargeback_order_status.sql",
+      "014_customer_activation.sql",
+      "015_production_runtime.sql",
     ]);
     expect(first.pending).toBe(0);
     expect(second.applied).toEqual([]);
@@ -90,6 +92,8 @@ describe("PostgreSQL migrations", () => {
       "011_transactional_email_outbox.sql",
       "012_privacy_requests.sql",
       "013_chargeback_order_status.sql",
+      "014_customer_activation.sql",
+      "015_production_runtime.sql",
     ]);
     expect(recorded.rows[0]).toMatchObject({ version: 1, name: "baseline" });
     expect(recorded.rows[0].checksum.trim()).toMatch(/^[a-f0-9]{64}$/);

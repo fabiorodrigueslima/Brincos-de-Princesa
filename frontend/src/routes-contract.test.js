@@ -9,7 +9,7 @@ describe('application route contracts', () => {
   it('mounts the protected order return route and admin entry route', () => {
     expect(appSource).toContain('path="pedido/:code"')
     expect(appSource).toContain('path="admin"')
-    expect(appSource).toContain('element={<OrderPage />}')
+    expect(appSource).toContain('element={<CommerceGate><OrderPage /></CommerceGate>}')
     expect(appSource).toContain('element={<AdminPage />}')
   })
 

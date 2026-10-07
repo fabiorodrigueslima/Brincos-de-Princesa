@@ -1,3 +1,5 @@
+import { z } from 'zod';
+import { directUploadService } from '../services/directUploadService.js';
 import express, { Router } from "express";
 import { login, logout, me } from "../controllers/adminAuthController.js";
 import { validateRequest } from "../middlewares/validateRequest.js";
@@ -121,7 +123,7 @@ adminRouter.delete("/categories/:id",requireCsrf,requireRole("OWNER","MANAGER"),
 adminRouter.post("/collections",requireCsrf,requireRole("OWNER","MANAGER"),validateRequest(collectionSchema,"body"),createCollection);
 adminRouter.put("/collections/:id",requireCsrf,requireRole("OWNER","MANAGER"),validateRequest(idParamsSchema,"params"),validateRequest(collectionSchema,"body"),updateCollection);
 adminRouter.delete("/collections/:id",requireCsrf,requireRole("OWNER","MANAGER"),validateRequest(idParamsSchema,"params"),deactivateCollection);
-adminRouter.post("/images",requireCsrf,requireRole("OWNER","MANAGER"),validateRequest(imageUploadQuerySchema,"query"),express.raw({type:["image/jpeg","image/png","image/webp"],limit:"5mb"}),uploadImage);
+adminRouter.post("/images",requireCsrf,requireRole("OWNER","MANAGER"),validateRequest(imageUploadQuerySchema,"query"),express.raw({type:["image/jpeg","image/png","image/webp"],limit:"4mb"}),uploadImage);
 adminRouter.delete("/images/:id",requireCsrf,requireRole("OWNER","MANAGER"),validateRequest(idParamsSchema,"params"),deleteImage);
 adminRouter.get("/settings", requireRole("OWNER", "MANAGER"), settings);
 adminRouter.put(
@@ -131,3 +133,7 @@ adminRouter.put(
   validateRequest(settingSchema, "body"),
   updateSettings,
 );
+
+const directImageSchema = z.object({productId:z.number().int().positive(),mime:z.enum(['image/jpeg','image/png','image/webp']),bytes:z.number().int().positive().max(5242880),alt:z.string().trim().min(2).max(180),primary:z.boolean()}).strict();
+adminRouter.post('/images/sign',requireCsrf,requireRole('OWNER','MANAGER'),validateRequest(directImageSchema,'body'),async(req,res)=>res.status(201).json({data:await directUploadService.prepare(req.validated.body)}));
+adminRouter.post('/images/complete',requireCsrf,requireRole('OWNER','MANAGER'),validateRequest(z.object({id:z.string().uuid()}).strict(),'body'),async(req,res)=>res.json({data:await directUploadService.complete(req.validated.body.id)}));

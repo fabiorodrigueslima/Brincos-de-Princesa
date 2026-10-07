@@ -32,7 +32,7 @@ export function resolveAdminConnection({ target = 'development' } = {}) {
   if (databaseName(adminUrl) !== databaseName(runtimeUrl)) {
     throw new Error(`${explicitAdminVariable} deve apontar para o mesmo banco de ${runtimeVariable}`)
   }
-  if (adminUrl.hostname !== runtimeUrl.hostname || adminUrl.port !== runtimeUrl.port) {
+  if ((adminUrl.hostname !== runtimeUrl.hostname || adminUrl.port !== runtimeUrl.port) && process.env.ALLOW_DIFFERENT_DATABASE_ENDPOINTS !== 'true') {
     throw new Error('Runtime e administração devem apontar para a mesma instância PostgreSQL')
   }
 

@@ -1,5 +1,7 @@
 # Brinco de Princesa
 
+Preparação para Vercel Services: consulte [DEPLOY.md](DEPLOY.md), [PRODUCTION_CHECKLIST.md](PRODUCTION_CHECKLIST.md) e o [relatório técnico](docs/PRODUCTION-READINESS-2026-10-07.md). Node 24 e npm 11; instalação reproduzível com `npm ci` na raiz. Credenciais e infraestrutura reais ainda exigem homologação.
+
 > Fase 8: painel administrativo protegido disponível em `/admin`. Crie o primeiro proprietário com `npm run admin:create`. Consulte [`docs/PHASE-8-ADMIN.md`](docs/PHASE-8-ADMIN.md).
 
 > Pedido transacional, reserva concorrente, idempotência e integração Mercado Pago Checkout Pro estão implementados. A abertura comercial permanece bloqueada até configurar credenciais, webhook, frete e infraestrutura reais. Consulte [`docs/MERCADO-PAGO.md`](docs/MERCADO-PAGO.md).

@@ -4,12 +4,13 @@ const put = vi.fn()
 const remove = vi.fn()
 const addImage = vi.fn()
 const deleteImage = vi.fn()
+const findImage = vi.fn()
 
 vi.mock('../src/providers/storageProvider.js', () => ({
   storageProvider: { put, delete: remove },
 }))
 vi.mock('../src/repositories/adminRepository.js', () => ({
-  adminRepository: { addImage, deleteImage },
+  adminRepository: { addImage, deleteImage, findImage },
 }))
 
 const { imageService } = await import('../src/services/imageService.js')
@@ -21,6 +22,7 @@ describe('image service', () => {
     remove.mockReset()
     addImage.mockReset()
     deleteImage.mockReset()
+    findImage.mockReset()
   })
 
   it('rejects content whose bytes do not match the declared image type', async () => {
@@ -75,7 +77,7 @@ describe('image service', () => {
   })
 
   it('removes the stored object associated with a deleted database row', async () => {
-    deleteImage.mockResolvedValue({ storage_key: 'catalog/image.webp' })
+    findImage.mockResolvedValue({ storage_key: 'catalog/image.webp' })
 
     await imageService.delete(9)
 

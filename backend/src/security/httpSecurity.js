@@ -1,3 +1,4 @@
+import { PostgresRateLimitStore } from './postgresRateLimitStore.js';
 import cors from "cors";
 import helmet from "helmet";
 import { rateLimit } from "express-rate-limit";
@@ -34,6 +35,7 @@ export const corsPolicy = cors({
 });
 
 export const publicRateLimit = rateLimit({
+  store: env.NODE_ENV === 'production' || env.RATE_LIMIT_STORE === 'postgres' ? new PostgresRateLimitStore('publicRateLimit') : undefined,
   windowMs: 15 * 60 * 1000,
   limit: 300,
   standardHeaders: "draft-8",
@@ -47,6 +49,7 @@ export const publicRateLimit = rateLimit({
 });
 
 export const checkoutRateLimit = rateLimit({
+  store: env.NODE_ENV === 'production' || env.RATE_LIMIT_STORE === 'postgres' ? new PostgresRateLimitStore('checkoutRateLimit') : undefined,
   windowMs: 15 * 60 * 1000,
   limit: 40,
   standardHeaders: "draft-8",
@@ -60,6 +63,7 @@ export const checkoutRateLimit = rateLimit({
 });
 
 export const orderMutationRateLimit = rateLimit({
+  store: env.NODE_ENV === 'production' || env.RATE_LIMIT_STORE === 'postgres' ? new PostgresRateLimitStore('orderMutationRateLimit') : undefined,
   windowMs: 15 * 60 * 1000,
   limit: 15,
   standardHeaders: "draft-8",
@@ -72,6 +76,7 @@ export const orderMutationRateLimit = rateLimit({
   },
 });
 export const orderStatusRateLimit = rateLimit({
+  store: env.NODE_ENV === 'production' || env.RATE_LIMIT_STORE === 'postgres' ? new PostgresRateLimitStore('orderStatusRateLimit') : undefined,
   windowMs: 60 * 1000,
   limit: 30,
   standardHeaders: "draft-8",
@@ -84,6 +89,7 @@ export const orderStatusRateLimit = rateLimit({
   },
 });
 export const adminLoginRateLimit = rateLimit({
+  store: env.NODE_ENV === 'production' || env.RATE_LIMIT_STORE === 'postgres' ? new PostgresRateLimitStore('adminLoginRateLimit') : undefined,
   windowMs: 15 * 60 * 1000,
   limit: 10,
   standardHeaders: "draft-8",
@@ -97,6 +103,7 @@ export const adminLoginRateLimit = rateLimit({
 });
 
 export const customerAuthRateLimit = rateLimit({
+  store: env.NODE_ENV === 'production' || env.RATE_LIMIT_STORE === 'postgres' ? new PostgresRateLimitStore('customerAuthRateLimit') : undefined,
   windowMs: 15 * 60 * 1000,
   limit: 10,
   standardHeaders: "draft-8",
@@ -108,3 +115,6 @@ export const customerAuthRateLimit = rateLimit({
     },
   },
 });
+
+export const customerRegistrationRateLimit = rateLimit({windowMs:900000,limit:5,store:env.NODE_ENV==='production'||env.RATE_LIMIT_STORE==='postgres'?new PostgresRateLimitStore('registration'):undefined});
+export const customerRecoveryRateLimit = rateLimit({windowMs:900000,limit:5,store:env.NODE_ENV==='production'||env.RATE_LIMIT_STORE==='postgres'?new PostgresRateLimitStore('recovery'):undefined});

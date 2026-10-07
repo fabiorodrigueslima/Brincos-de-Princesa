@@ -7,7 +7,7 @@
     "dev": "node --env-file-if-exists=.env --watch src/server.js",
     "start": "node --env-file-if-exists=.env src/server.js",
     "db:check": "node --env-file-if-exists=.env src/scripts/checkDatabase.js",
-    "db:status": "node --env-file-if-exists=.env src/scripts/checkDatabase.js",
+    "db:status": "node --env-file-if-exists=.env src/scripts/migrationStatus.js",
     "db:migrate": "node --env-file-if-exists=.env src/scripts/runMigrations.js",
     "db:seed:dev": "node --env-file-if-exists=.env src/scripts/runDevelopmentSeed.js",
     "admin:create": "node --env-file-if-exists=.env src/scripts/createAdmin.js",
@@ -17,9 +17,10 @@
     "lint": "eslint .",
     "test": "npm run test:unit && npm run test:postgres",
     "test:unit": "vitest run --exclude tests/*-postgres.integration.test.js",
-    "test:postgres": "node --env-file-if-exists=.env tests/run-postgres-integration.js"
+    "test:postgres": "node tests/run-postgres-integration.js"
   },
   "dependencies": {
+    "@vercel/functions": "3.9.11",
     "cors": "^2.8.5",
     "express": "^5.1.0",
     "express-rate-limit": "^8.1.0",
@@ -32,7 +33,10 @@
     "eslint": "^10.8.0",
     "globals": "^17.7.0",
     "supertest": "^7.1.4",
-    "vitest": "^3.2.4"
+    "vitest": "5.0.3"
   },
-  "engines": { "node": ">=22.0.0" }
+  "engines": {
+    "node": "24.x",
+    "npm": "11.x"
+  }
 }

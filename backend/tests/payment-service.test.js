@@ -10,7 +10,7 @@ describe("payment provider boundary", () => {
         checkoutUrl: "https://checkout.test",
       })),
     };
-    const repository = { create: vi.fn(async (value) => value) };
+    const repository = { prepare: vi.fn(async () => ({ id: 1 })), complete: vi.fn(async () => ({})) };
     const service = createPaymentService({
       provider,
       repository,
@@ -28,7 +28,7 @@ describe("payment provider boundary", () => {
     expect(provider.createPayment).toHaveBeenCalledWith(
       expect.objectContaining({ amount: "120.50" }),
     );
-    expect(repository.create).toHaveBeenCalledWith(
+    expect(repository.prepare).toHaveBeenCalledWith(
       expect.objectContaining({ amount: "120.50" }),
     );
   });

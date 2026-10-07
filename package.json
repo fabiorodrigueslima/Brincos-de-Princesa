@@ -2,7 +2,10 @@
   "name": "brinco-de-princesa",
   "version": "0.1.0",
   "private": true,
-  "workspaces": ["frontend", "backend"],
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
   "scripts": {
     "dev": "concurrently --kill-others --names frontend,backend --prefix-colors magenta,cyan \"npm run dev:frontend\" \"npm run dev:backend\"",
     "dev:frontend": "npm run dev --workspace frontend",
@@ -18,10 +21,19 @@
     "build": "npm run build --workspace frontend",
     "lint": "npm run lint --workspaces --if-present",
     "test": "npm run test --workspaces --if-present",
-    "check": "npm run lint && npm run test && npm run build"
+    "check": "npm run lint && npm test && npm run build && npm run validate:deploy",
+    "validate:deploy": "node scripts/validate-deploy.mjs"
   },
   "devDependencies": {
+    "ajv": "8.20.0",
+    "ajv-formats": "3.0.1",
     "concurrently": "^9.2.1"
   },
-  "engines": { "node": ">=22.0.0" }
+  "engines": {
+    "node": "24.x",
+    "npm": "11.x"
+  },
+  "overrides": {
+    "shell-quote": "1.12.0"
+  }
 }

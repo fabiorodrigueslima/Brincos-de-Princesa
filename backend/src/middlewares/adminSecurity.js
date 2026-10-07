@@ -1,8 +1,9 @@
+import { env } from '../config/env.js';
 import { timingSafeEqual } from "node:crypto";
 import { adminAuthService } from "../services/adminAuthService.js";
 import { AppError } from "../utils/AppError.js";
 
-export const ADMIN_COOKIE = "__Host-bdp_admin";
+export const ADMIN_COOKIE = env.NODE_ENV === "production" ? "__Host-bdp_admin" : "bdp_admin";
 export function sensitiveNoStore(_req, res, next) {
   res.setHeader("Cache-Control", "no-store, private");
   res.setHeader("Pragma", "no-cache");
@@ -82,6 +83,6 @@ export function adminCookieOptions() {
     secure: true,
     sameSite: "strict",
     path: "/",
-    maxAge: 8 * 60 * 60 * 1000,
+    maxAge: env.ADMIN_SESSION_HOURS * 60 * 60 * 1000,
   };
 }

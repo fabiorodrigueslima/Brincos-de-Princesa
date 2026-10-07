@@ -5,7 +5,7 @@ import {
   getOrder,
 } from "../controllers/orderController.js";
 import { validateRequest } from "../middlewares/validateRequest.js";
-import { requireCustomer } from "../middlewares/customerSecurity.js";
+import { requireCustomer, requireCustomerCsrf } from "../middlewares/customerSecurity.js";
 import { sensitiveNoStore } from "../middlewares/adminSecurity.js";
 import {
   orderMutationRateLimit,
@@ -23,6 +23,7 @@ orderRouter.use(sensitiveNoStore);
 orderRouter.post(
   "/",
   requireCustomer,
+  requireCustomerCsrf,
   orderMutationRateLimit,
   validateRequest(createOrderSchema, "body"),
   createOrder,

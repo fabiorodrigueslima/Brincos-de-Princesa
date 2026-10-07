@@ -41,7 +41,7 @@ export async function paymentWebhook(req, res) {
   res.json({
     data: await paymentService.webhook({
       providerName: req.validated.params.provider,
-      signature: req.get("X-Webhook-Signature"),
+      signature: req.get("X-Signature"),
       requestId: req.get("X-Request-Id"),
       dataId: dataId == null ? undefined : String(dataId),
       payload: req.body,

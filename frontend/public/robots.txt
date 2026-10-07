@@ -8,3 +8,4 @@ Disallow: /login
 Disallow: /cadastro
 Disallow: /recuperar-senha
 Disallow: /redefinir-senha
+Disallow: /ativar-conta

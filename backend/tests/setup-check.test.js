@@ -23,6 +23,11 @@ function runSetupCheck(storageProvider, storageConfig = {}) {
     CLOUDINARY_API_KEY: 'test-key',
     CLOUDINARY_API_SECRET: 'test-secret',
     STORAGE_PROVIDER: storageProvider,
+    SUPERFRETE_API_BASE_URL:'https://api.superfrete.com/api/v0',
+    CRON_SECRET:'test-cron-secret-12345678901234567890',
+    EMAIL_PROVIDER:'http',
+    EMAIL_WEBHOOK_URL:'https://mail.example.com/send',
+    EMAIL_WEBHOOK_TOKEN:'test-only',
     ...storageConfig,
   }
   return spawnSync(process.execPath, [setupCheck], {

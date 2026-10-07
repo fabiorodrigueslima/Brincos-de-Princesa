@@ -30,13 +30,36 @@ export const customerRepository = {
       throw error;
     }
   },
-  async updateGuestAccount(id, value, passwordHash) {
-    return (
-      await query({
-        text: `UPDATE app.clientes SET nome=$1,telefone=$2,password_hash=$3 WHERE id=$4 AND password_hash IS NULL RETURNING id,email,nome,telefone`,
-        values: [value.name, value.phone, passwordHash, id],
-      })
-    ).rows[0];
+  async createActivation(customerId, tokenHash) {
+    return transaction(async (client) => {
+      const customer = await client.query({
+        text: `SELECT id FROM app.clientes WHERE id=$1 AND password_hash IS NULL AND ativo=TRUE AND anonimizado_em IS NULL FOR UPDATE`,
+        values: [customerId],
+      });
+      if (!customer.rowCount) return false;
+      await client.query({
+        text: `INSERT INTO app.cliente_activation_tokens(cliente_id,token_hash,expira_em) VALUES($1,$2,now()+interval '30 minutes')`,
+        values: [customerId, tokenHash],
+      });
+      return true;
+    });
+  },
+  async consumeActivation(tokenHash, passwordHash) {
+    return transaction(async (client) => {
+      const invalid = () => new AppError(400, 'ACTIVATION_TOKEN_INVALID', 'Link de ativação inválido ou expirado.');
+      const found = await client.query({ text: `SELECT cliente_id FROM app.cliente_activation_tokens WHERE token_hash=$1`, values: [tokenHash] });
+      if (!found.rowCount) throw invalid();
+      const customerId = found.rows[0].cliente_id;
+      // Serialize all activation attempts for this account, even different tokens.
+      const customer = await client.query({ text: `SELECT id FROM app.clientes WHERE id=$1 AND password_hash IS NULL AND ativo=TRUE AND anonimizado_em IS NULL FOR UPDATE`, values: [customerId] });
+      if (!customer.rowCount) throw invalid();
+      const token = await client.query({ text: `SELECT id FROM app.cliente_activation_tokens WHERE token_hash=$1 AND usado_em IS NULL AND expira_em>clock_timestamp() FOR UPDATE`, values: [tokenHash] });
+      if (!token.rowCount) throw invalid();
+      await client.query({ text: `UPDATE app.clientes SET password_hash=$1,email_verificado_em=now(),tentativas_login_falhas=0,bloqueado_ate=NULL WHERE id=$2`, values: [passwordHash, customerId] });
+      await client.query({ text: `UPDATE app.cliente_activation_tokens SET usado_em=now() WHERE cliente_id=$1 AND usado_em IS NULL`, values: [customerId] });
+      await client.query({ text: `UPDATE app.cliente_password_reset_tokens SET usado_em=now() WHERE cliente_id=$1 AND usado_em IS NULL`, values: [customerId] });
+      await client.query({ text: `UPDATE app.cliente_sessoes SET revogada_em=now() WHERE cliente_id=$1 AND revogada_em IS NULL`, values: [customerId] });
+    });
   },
   async findById(id) {
     return (

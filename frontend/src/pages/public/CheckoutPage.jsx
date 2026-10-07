@@ -16,7 +16,7 @@ function Field({ label, name, value, error, onChange, ...props }) {
 
 export function CheckoutPage() {
   const navigate = useNavigate()
-  const { user, loading: authLoading } = useCustomerAuth()
+  const { user, csrfToken, loading: authLoading } = useCustomerAuth()
   const { items, clearCart } = useCart()
   const [step, setStep] = useState(1)
   const [customer, setCustomer] = useState(blankCustomer)
@@ -53,10 +53,19 @@ export function CheckoutPage() {
     if (!quote?.selectedShipping) return
     setLoading(true); setMessage('Criando pedido e abrindo o ambiente seguro do Mercado Pago…')
     try {
-      const payload = { items, customer: { name: customer.name.trim(), email: customer.email.trim(), phone: customer.phone.trim() }, address: { ...address, postalCode: normalizePostalCode(address.postalCode), state: address.state.toUpperCase() }, shippingOptionId: quote.selectedShipping.id }
-      const order = (await createOrder(payload, crypto.randomUUID())).data
+      const payload = { items, customer: { name: customer.name.trim(), email: customer.email.trim(), phone: customer.phone.trim() }, address: { ...address, postalCode: normalizePostalCode(address.postalCode), state: address.state.toUpperCase() }, shippingOptionId: quote.selectedShipping.id, expectedTotal: quote.total }
+      const fingerprint = Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(JSON.stringify({payload,paymentMethod}))))).map(byte=>byte.toString(16).padStart(2,'0')).join('');
+      const attemptKey = 'brinco-de-princesa:checkout:' + user.id;
+      let attempt;
+      try { attempt = JSON.parse(sessionStorage.getItem(attemptKey)); } catch { attempt = null; }
+      if (attempt?.fingerprint !== fingerprint) attempt = { fingerprint, orderKey:crypto.randomUUID(), paymentKey:crypto.randomUUID() };
+      sessionStorage.setItem(attemptKey, JSON.stringify(attempt));
+      const order = attempt.order ?? (await createOrder(payload, attempt.orderKey, undefined, csrfToken)).data;
+      attempt.order = order;
+      sessionStorage.setItem(attemptKey, JSON.stringify(attempt));
       sessionStorage.setItem(`brinco-de-princesa:order:${order.code}`, order.accessToken)
-      const payment = (await createPayment(order.code, order.accessToken, paymentMethod, crypto.randomUUID())).data
+      const payment = (await createPayment(order.code, order.accessToken, paymentMethod, attempt.paymentKey)).data
+      sessionStorage.removeItem(attemptKey)
       clearCart()
       window.location.assign(payment.checkoutUrl)
     } catch (error) { setMessage(error.message); setLoading(false) }
@@ -66,7 +75,7 @@ export function CheckoutPage() {
   if (authLoading || !user) return <section className="cart-empty container"><PageMeta title="Acesso ao checkout" description="Entre na sua conta para finalizar a compra." noindex /><h1>Preparando seu checkout.</h1><p>Entre ou crie sua conta para continuar com segurança.</p><Link className="button button-primary" to="/login?next=/checkout">Entrar na conta</Link></section>
 
   return <section className="checkout-page container"><PageMeta title="Checkout" description="Identificação, entrega e revisão da compra." noindex />
-    <header className="checkout-heading"><p className="eyebrow">Checkout seguro</p><h1>Revise cada detalhe</h1><p>Seus dados ficam apenas nesta tela. Nenhum pedido será criado nesta fase.</p></header>
+    <header className="checkout-heading"><p className="eyebrow">Checkout seguro</p><h1>Revise cada detalhe</h1><p>Confira seus dados e a entrega antes de criar o pedido e seguir para o pagamento.</p></header>
     <ol className="checkout-steps" aria-label="Etapas do checkout">{['Identificação','Endereço','Entrega','Revisão'].map((label, index) => <li key={label} className={step >= index + 1 ? 'active' : ''} aria-current={step === index + 1 ? 'step' : undefined}><span>{index + 1}</span>{label}</li>)}</ol>
     <p className="checkout-status" role="status" aria-live="polite">{message}</p>
     {step === 1 && <form ref={form} className="checkout-form" noValidate onSubmit={submitCustomer}><fieldset><legend>Identificação</legend><p>Dados mínimos para preparar a revisão da compra.</p><Field label="Nome completo" name="name" value={customer.name} error={errors.name} onChange={update(setCustomer)} autoComplete="name" /><Field label="E-mail" name="email" type="email" inputMode="email" value={customer.email} error={errors.email} onChange={update(setCustomer)} autoComplete="email" /><Field label="Telefone" name="phone" type="tel" inputMode="tel" value={customer.phone} error={errors.phone} onChange={update(setCustomer)} autoComplete="tel" /></fieldset><button className="button button-primary" type="submit">Continuar para endereço</button></form>}

@@ -13,7 +13,7 @@ export function createPaymentService({
 } = {}) {
   return {
     async create({ code, token, method, idempotencyKey }) {
-      if (!idempotencyKey || idempotencyKey.length < 16)
+      if (!idempotencyKey || idempotencyKey.length < 16 || idempotencyKey.length > 128)
         throw new AppError(
           400,
           "IDEMPOTENCY_KEY_REQUIRED",
@@ -26,25 +26,21 @@ export function createPaymentService({
           "ORDER_NOT_PAYABLE",
           "Este pedido não está disponível para pagamento.",
         );
-      const external = await provider.createPayment({
+      const attempt = await repository.prepare({ code, tokenHash: hash(token), provider: provider.name, idempotencyKey, method, amount: String(order.total) });
+      if (attempt.replayed) return attempt;
+      let external;
+      try { external = await provider.createPayment({
         reference: code,
         amount: String(order.total),
-        shipping: String(order.frete),
+        shipping: String(order.frete ?? "0.00"),
         items: order.items,
         currency: "BRL",
         method,
         idempotencyKey,
         payer: { name: order.nome_cliente, email: order.email_cliente },
       });
-      const persisted = await repository.create({
-        code,
-        tokenHash: hash(token),
-        provider: provider.name,
-        preferenceId: external.preferenceId,
-        idempotencyKey,
-        method,
-        amount: String(order.total),
-      });
+      } catch (error) { await repository.uncertain(attempt.id); throw error; }
+      const persisted = await repository.complete(attempt.id, external);
       return { ...persisted, checkoutUrl: external.checkoutUrl };
     },
     async webhook({ providerName, signature, requestId, dataId, payload }) {

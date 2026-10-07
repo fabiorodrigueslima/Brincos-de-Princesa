@@ -36,26 +36,39 @@ export function createCustomerAuthService(
     hash,
     async register(value) {
       const existing = await repository.findByEmail(value.email);
-      if (existing?.password_hash)
+      if (existing)
         throw new AppError(
           409,
           "ACCOUNT_EXISTS",
           "Já existe uma conta para este e-mail.",
         );
-      let customer;
-      if (existing) {
-        const passwordHash = await hashPassword(value.password);
-        customer = await repository.updateGuestAccount(
-          existing.id,
-          value,
-          passwordHash,
-        );
-      } else
-        customer = await repository.create(
+      const customer = await repository.create(
           value,
           await hashPassword(value.password),
         );
       return session(customer);
+    },
+    async requestActivation(emailAddress) {
+      // Every address receives the same public response, including delivery failure.
+      try {
+        const customer = await repository.findByEmail(emailAddress);
+        if (customer?.ativo && !customer.anonimizado_em && !customer.password_hash) {
+          const token = randomToken();
+          if (await repository.createActivation(customer.id, hash(token))) {
+            await email.sendAccountActivation({
+              email: customer.email,
+              activationUrl: `${env.PUBLIC_FRONTEND_URL ?? 'http://localhost:5173'}/ativar-conta?token=${encodeURIComponent(token)}`,
+            });
+          }
+        }
+      } catch {
+        console.error(JSON.stringify({ event: 'CUSTOMER_ACTIVATION_REQUEST_FAILED' }));
+      }
+      return { accepted: true };
+    },
+    async activate(token, password) {
+      await repository.consumeActivation(hash(token), await hashPassword(password));
+      return { activated: true };
     },
     async login(value) {
       const customer = await repository.findByEmail(value.email);
@@ -105,10 +118,11 @@ export function createCustomerAuthService(
       if (!customer?.password_hash) return { accepted: true };
       const token = randomToken();
       await repository.createReset(customer.id, hash(token));
-      await email.sendPasswordReset({
+      try { await email.sendPasswordReset({
         email: customer.email,
         resetUrl: `${env.PUBLIC_FRONTEND_URL ?? "http://localhost:5173"}/redefinir-senha?token=${encodeURIComponent(token)}`,
       });
+      } catch { console.error(JSON.stringify({ event: 'CUSTOMER_RESET_REQUEST_FAILED' })); }
       return {
         accepted: true,
         ...(env.NODE_ENV === "development"

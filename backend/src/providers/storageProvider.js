@@ -95,6 +95,18 @@ export function createCloudinaryStorageProvider({
   };
 
   return {
+    signUpload(id) {
+      requiredConfig();
+      const publicId = folder + '/' + id;
+      const params = { public_id: publicId, timestamp: now(), overwrite: false, allowed_formats: 'jpg,png,webp' };
+      return { publicId, uploadUrl: 'https://api.cloudinary.com/v1_1/' + encodeURIComponent(config.CLOUDINARY_CLOUD_NAME) + '/image/upload', fields: { ...params, api_key: config.CLOUDINARY_API_KEY, signature: cloudinarySignature(params,config.CLOUDINARY_API_SECRET) } };
+    },
+    async inspect(publicId) {
+      requiredConfig();
+      const response = await fetchImpl('https://api.cloudinary.com/v1_1/' + encodeURIComponent(config.CLOUDINARY_CLOUD_NAME) + '/resources/image/upload/' + encodeURIComponent(publicId), { headers: { Authorization: 'Basic ' + Buffer.from(config.CLOUDINARY_API_KEY + ':' + config.CLOUDINARY_API_SECRET).toString('base64') }, signal: AbortSignal.timeout(config.EXTERNAL_REQUEST_TIMEOUT_MS) });
+      if (!response.ok) throw new AppError(502,'STORAGE_LOOKUP_FAILED','Não foi possível verificar a imagem.');
+      return response.json();
+    },
     async put({ buffer, mime }) {
       requiredConfig();
       const timestamp = now();
@@ -120,7 +132,7 @@ export function createCloudinaryStorageProvider({
       requiredConfig();
       if (!publicId) return;
       const timestamp = now();
-      const signedParams = { public_id: publicId, timestamp };
+      const signedParams = { invalidate: true, public_id: publicId, timestamp };
       const form = new FormData();
       form.append("api_key", config.CLOUDINARY_API_KEY);
       form.append("timestamp", String(timestamp));

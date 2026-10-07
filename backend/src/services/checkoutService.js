@@ -2,8 +2,7 @@ import { cartService } from './cartService.js'
 import { shippingProvider } from '../providers/shippingProvider.js'
 import { AppError } from '../utils/AppError.js'
 
-const toCents = (value) => Math.round(Number(value) * 100)
-const toDecimal = (value) => `${Math.floor(value / 100)}.${String(value % 100).padStart(2, '0')}`
+import { toCents, toDecimal } from '../utils/money.js'
 
 export function createCheckoutService({ cart = cartService, shipping = shippingProvider } = {}) {
   return {

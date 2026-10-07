@@ -55,7 +55,7 @@ const checks = [
   [
     "Email provider",
     Boolean(env.EMAIL_PROVIDER && env.EMAIL_PROVIDER !== "disabled"),
-    "optional",
+    env.NODE_ENV === "production" ? "required" : "optional",
   ],
   [
     "Storage provider",

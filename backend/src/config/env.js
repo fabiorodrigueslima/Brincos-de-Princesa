@@ -10,12 +10,18 @@ const schema = z
     NODE_ENV: z
       .enum(["development", "test", "production"])
       .default("development"),
+    SITE_MODE: z.enum(['commerce', 'catalog']).default('commerce'),
+    VERCEL: z.string().optional(),
+    VERCEL_ENV: z.enum(['production', 'preview', 'development']).optional(),
+    CRON_SECRET: z.string().min(32).optional(),
+    WEBHOOK_MAX_AGE_SECONDS: z.coerce.number().int().min(60).max(86400).default(600),
+    RATE_LIMIT_STORE: z.enum(['memory','postgres']).optional(),
     PORT: z.coerce.number().int().min(1).max(65535).default(3000),
     FRONTEND_ORIGINS: z.string().default("http://localhost:5173"),
-    TRUST_PROXY: z.coerce.number().int().min(0).max(2).default(0),
+    TRUST_PROXY: z.coerce.number().int().min(0).max(2).default(process.env.VERCEL ? 1 : 0),
     DATABASE_URL: z.string().min(1).optional(),
     DB_SSL: booleanString,
-    DB_POOL_MAX: z.coerce.number().int().min(1).max(30).default(10),
+    DB_POOL_MAX: z.coerce.number().int().min(1).max(30).default(3),
     DB_IDLE_TIMEOUT_MS: z.coerce
       .number()
       .int()
@@ -99,7 +105,20 @@ const schema = z
       .min(1)
       .default("brinco-de-princesa/products"),
   })
+  .transform(value => value.SITE_MODE === 'catalog' ? { ...value, PAYMENT_PROVIDER: 'disabled', SHIPPING_PROVIDER: 'disabled', EMAIL_PROVIDER: 'disabled', STORAGE_PROVIDER: 'disabled' } : value)
   .superRefine((value, context) => {
+    if (value.NODE_ENV === 'production') {
+      const issue = (field) => context.addIssue({ code: 'custom', path: [field], message: 'configuração de produção inválida' });
+      for (const field of (value.SITE_MODE === 'catalog' ? ['PUBLIC_BACKEND_URL','PUBLIC_FRONTEND_URL'] : ['PUBLIC_BACKEND_URL','PUBLIC_FRONTEND_URL','SUPERFRETE_API_BASE_URL','EMAIL_WEBHOOK_URL','MERCADO_PAGO_API_URL'])) {
+        try { const url = new URL(value[field]); if (url.protocol !== 'https:' || url.username || url.password || /localhost|127\.0\.0\.1|\[::1\]/.test(url.hostname) || (value.VERCEL_ENV !== 'preview' && /sandbox/.test(url.hostname))) issue(field); } catch { issue(field); }
+      }
+      for (const origin of value.FRONTEND_ORIGINS.split(',')) {
+        try { const url = new URL(origin.trim()); if (url.protocol !== 'https:' || url.origin !== origin.trim() || /localhost|127\.0\.0\.1|\[::1\]/.test(url.hostname)) issue('FRONTEND_ORIGINS'); } catch { issue('FRONTEND_ORIGINS'); }
+      }
+      if (value.SITE_MODE !== 'catalog' && (!value.CRON_SECRET || /^CHANGEME/i.test(value.CRON_SECRET))) issue('CRON_SECRET');
+      if (value.RATE_LIMIT_STORE === 'memory') issue('RATE_LIMIT_STORE');
+      if (value.SITE_MODE !== 'catalog' && value.EMAIL_PROVIDER !== 'http') issue('EMAIL_PROVIDER');
+    }
     if (value.NODE_ENV === "production" && !value.DATABASE_URL) {
       context.addIssue({
         code: "custom",
@@ -107,14 +126,14 @@ const schema = z
         message: "obrigatória em produção",
       });
     }
-    if (value.NODE_ENV === "production" && value.PAYMENT_PROVIDER !== "mercado-pago") {
+    if (value.NODE_ENV === "production" && value.SITE_MODE !== 'catalog' && value.PAYMENT_PROVIDER !== "mercado-pago") {
       context.addIssue({
         code: "custom",
         path: ["PAYMENT_PROVIDER"],
         message: "deve ser 'mercado-pago' em produção",
       });
     }
-    if (value.NODE_ENV === "production" && value.SHIPPING_PROVIDER !== "superfrete") {
+    if (value.NODE_ENV === "production" && value.SITE_MODE !== 'catalog' && value.SHIPPING_PROVIDER !== "superfrete") {
       context.addIssue({
         code: "custom",
         path: ["SHIPPING_PROVIDER"],
@@ -178,7 +197,7 @@ const schema = z
     requireField(cloudinary, "CLOUDINARY_CLOUD_NAME", "obrigatória para Cloudinary");
     requireField(cloudinary, "CLOUDINARY_API_KEY", "obrigatória para Cloudinary");
     requireField(cloudinary, "CLOUDINARY_API_SECRET", "obrigatória para Cloudinary");
-    if (value.NODE_ENV === "production" && value.STORAGE_PROVIDER !== "cloudinary")
+    if (value.NODE_ENV === "production" && value.SITE_MODE !== 'catalog' && value.STORAGE_PROVIDER !== "cloudinary")
       context.addIssue({
         code: "custom",
         path: ["STORAGE_PROVIDER"],

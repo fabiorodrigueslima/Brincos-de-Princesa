@@ -13,6 +13,7 @@ dist-ssr
 .vite
 .vite-temp
 .cache
+.audit-npm-cache/
 *.local
 *.tmp
 .env

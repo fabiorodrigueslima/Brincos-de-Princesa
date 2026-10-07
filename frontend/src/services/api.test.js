@@ -1,9 +1,24 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { ApiError, createOrder, getCollection, getCourse, getCourses, getOrder, getProducts } from './api.js'
+import { ApiError, createOrder, customerActivate, customerRequestActivation, getCollection, getCourse, getCourses, getOrder, getProducts } from './api.js'
 
 afterEach(() => vi.unstubAllGlobals())
 
 describe('catalog API client', () => {
+  it('keeps activation separate from password recovery and sends proof only in the body', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ data: { accepted: true } }) })
+    vi.stubGlobal('fetch', fetchMock)
+    await customerRequestActivation({ email: 'old@example.com' })
+    await customerActivate({ token: 'synthetic-proof', password: 'a strong password' })
+    expect(fetchMock.mock.calls[0][0]).toContain('/customers/auth/activation/request')
+    expect(fetchMock.mock.calls[1][0]).toContain('/customers/auth/activation/confirm')
+    expect(fetchMock.mock.calls[1][0]).not.toContain('synthetic-proof')
+    expect(fetchMock.mock.calls[1][1].method).toBe('POST')
+    expect(JSON.parse(fetchMock.mock.calls[1][1].body)).toEqual({ token: 'synthetic-proof', password: 'a strong password' })
+  })
+  it('preserves the server commercial-unavailability contract for checkout', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, status: 503, json: async () => ({ error: { code: 'CHECKOUT_DISABLED', message: 'Novas compras indisponíveis.' } }) }))
+    await expect(createOrder({ items: [] }, 'idempotency-123456')).rejects.toMatchObject({ status: 503, code: 'CHECKOUT_DISABLED', message: 'Novas compras indisponíveis.' })
+  })
   it('serializes combined commercial filters', async () => {
     const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ data: [], pagination: {} }) })
     vi.stubGlobal('fetch', fetchMock)

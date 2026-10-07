@@ -1,3 +1,4 @@
+import { useStorefront } from '../../context/storefrontContext.js';
 import { useEffect, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { PageMeta } from "../../components/common/PageMeta.jsx";
@@ -55,6 +56,7 @@ function ImageDialog({ image, productName, onClose }) {
 }
 
 export function ProductPage() {
+  const { mode } = useStorefront();
   const { slug } = useParams();
   const [product, setProduct] = useState(null);
   const [error, setError] = useState(null);
@@ -294,7 +296,7 @@ export function ProductPage() {
                 : "Indisponível no momento"}
             </p>
           )}
-          <div className="add-to-cart">
+          {mode !== 'commerce' ? <p>Compras online em breve. <Link to="/contato">Fale conosco</Link></p> : <div className="add-to-cart">
             <div
               className="quantity-control"
               aria-label="Quantidade a adicionar"
@@ -345,7 +347,7 @@ export function ProductPage() {
                 Ver carrinho
               </Link>
             )}
-          </div>
+          </div>}
           <section className="product-section">
             <h2>Sobre a peça</h2>
             <p>{product.description}</p>

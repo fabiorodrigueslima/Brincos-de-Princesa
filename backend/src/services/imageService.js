@@ -51,7 +51,8 @@ export const imageService = {
     }
   },
   async delete(id) {
-    const image = await adminRepository.deleteImage(id);
+    const image = await adminRepository.findImage(id);
     if (image?.storage_key) await storageProvider.delete(image.storage_key);
+    await adminRepository.deleteImage(id);
   },
 };

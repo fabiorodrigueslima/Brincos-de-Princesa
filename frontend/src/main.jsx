@@ -4,11 +4,12 @@ import App from './App.jsx'
 import { AppErrorBoundary } from './components/common/AppErrorBoundary.jsx'
 import { CartProvider } from './context/CartContext.jsx'
 import { CustomerAuthProvider } from './context/customerAuthContext.jsx'
+import { StorefrontProvider } from './context/StorefrontProvider.jsx'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <AppErrorBoundary>
-      <CustomerAuthProvider><CartProvider><App /></CartProvider></CustomerAuthProvider>
+      <StorefrontProvider><CustomerAuthProvider><CartProvider><App /></CartProvider></CustomerAuthProvider></StorefrontProvider>
     </AppErrorBoundary>
   </StrictMode>,
 )

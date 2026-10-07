@@ -1,3 +1,4 @@
+import { attachDatabasePool } from '@vercel/functions';
 import pg from "pg";
 import { env } from "./env.js";
 
@@ -10,10 +11,12 @@ const pool = env.DATABASE_URL
       idleTimeoutMillis: env.DB_IDLE_TIMEOUT_MS,
       connectionTimeoutMillis: env.DB_CONNECTION_TIMEOUT_MS,
       application_name: "brinco-de-princesa-api",
-      options: "-c search_path=app,public",
+
       ssl: env.DB_SSL ? { rejectUnauthorized: true } : false,
     })
   : null;
+
+if (pool && env.VERCEL) attachDatabasePool(pool);
 
 pool?.on("error", (error) => {
   console.error({ event: "DATABASE_POOL_ERROR", errorName: error.name });

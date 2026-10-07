@@ -2,6 +2,7 @@ import { createHash, randomBytes } from 'node:crypto'
 import { checkoutService } from './checkoutService.js'
 import { orderRepository } from '../repositories/orderRepository.js'
 import { AppError } from '../utils/AppError.js'
+import { checkoutAvailabilityService } from './checkoutAvailabilityService.js'
 
 const hash = (value) => createHash('sha256').update(value).digest('hex')
 const canonical = (value) => Array.isArray(value)
@@ -11,12 +12,14 @@ const canonical = (value) => Array.isArray(value)
     : value
 const stable = (value) => JSON.stringify(canonical(value))
 
-export function createOrderService({ checkout = checkoutService, repository = orderRepository } = {}) {
+export function createOrderService({ checkout = checkoutService, repository = orderRepository, availability = checkoutAvailabilityService } = {}) {
   return {
     async create(input, idempotencyKey) {
       if (!idempotencyKey || idempotencyKey.length < 16 || idempotencyKey.length > 128) throw new AppError(400, 'IDEMPOTENCY_KEY_REQUIRED', 'Envie uma chave de idempotência válida.')
+      await availability.assertEnabled()
       const quote = await checkout.quote(input)
       if (!quote.selectedShipping || quote.total == null) throw new AppError(409, 'FINAL_QUOTE_REQUIRED', 'Uma cotação real de entrega precisa ser selecionada.')
+      if (input.expectedTotal && input.expectedTotal !== quote.total) throw new AppError(409, 'QUOTE_CHANGED', 'O valor da entrega mudou. Revise a cotação antes de pagar.')
       const accessToken = randomBytes(32).toString('base64url')
       return repository.create({ ...input, quote, keyHash: hash(idempotencyKey), requestHash: hash(stable(input)), publicCode: `BP-${randomBytes(8).toString('hex').toUpperCase()}`, accessToken, accessTokenHash: hash(accessToken) })
     },

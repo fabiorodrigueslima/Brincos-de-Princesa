@@ -55,6 +55,11 @@ describe('environment configuration', () => {
     vi.stubEnv('PUBLIC_BACKEND_URL', 'https://api.example.com')
     vi.stubEnv('PUBLIC_FRONTEND_URL', 'https://shop.example.com')
     vi.stubEnv('STORAGE_PROVIDER', storageProvider)
+    vi.stubEnv('SUPERFRETE_API_BASE_URL','https://api.superfrete.com/api/v0')
+    vi.stubEnv('CRON_SECRET','test-cron-secret-12345678901234567890')
+    vi.stubEnv('EMAIL_PROVIDER','http')
+    vi.stubEnv('EMAIL_WEBHOOK_URL','https://mail.example.com/send')
+    vi.stubEnv('EMAIL_WEBHOOK_TOKEN','test-only')
     delete process.env.STORAGE_HTTP_URL
     delete process.env.STORAGE_HTTP_TOKEN
     delete process.env.STORAGE_PUBLIC_URL
@@ -70,6 +75,22 @@ describe('environment configuration', () => {
     stubProductionStorage(storageProvider)
 
     await expect(import('../src/config/env.js')).rejects.toThrow(/STORAGE_PROVIDER/)
+  })
+
+  it('allows sandbox only in an explicitly isolated Vercel preview', async () => {
+    stubProductionStorage()
+    vi.stubEnv('SUPERFRETE_API_BASE_URL', 'https://sandbox.superfrete.com/api/v0')
+    await expect(import('../src/config/env.js')).rejects.toThrow(/SUPERFRETE_API_BASE_URL/)
+    vi.resetModules()
+    vi.stubEnv('VERCEL_ENV', 'preview')
+    const { env } = await import('../src/config/env.js')
+    expect(env.SUPERFRETE_API_BASE_URL).toContain('sandbox')
+  })
+
+  it('rejects localhost in the production origin allowlist', async () => {
+    stubProductionStorage()
+    vi.stubEnv('FRONTEND_ORIGINS', 'https://localhost')
+    await expect(import('../src/config/env.js')).rejects.toThrow(/FRONTEND_ORIGINS/)
   })
 
   it('rejects an invalid storage provider', async () => {

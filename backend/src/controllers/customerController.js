@@ -17,6 +17,14 @@ export async function register(req, res) {
 export async function login(req, res) {
   sendSession(res, await customerAuthService.login(req.validated.body));
 }
+export async function requestActivation(req, res) {
+  res.status(202).json({ data: await customerAuthService.requestActivation(req.validated.body.email) });
+}
+export async function activate(req, res) {
+  const data = await customerAuthService.activate(req.validated.body.token, req.validated.body.password);
+  res.clearCookie(CUSTOMER_COOKIE, { ...customerCookieOptions(), maxAge: undefined });
+  res.json({ data });
+}
 export async function logout(req, res) {
   await customerAuthService.logout(req.customerToken);
   res.clearCookie(CUSTOMER_COOKIE, {

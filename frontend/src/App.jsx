@@ -1,3 +1,4 @@
+import { CommerceGate } from './components/commerce/CommerceGate.jsx';
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { SiteLayout } from "./layouts/SiteLayout.jsx";
 import { AboutPage } from "./pages/public/AboutPage.jsx";
@@ -18,6 +19,7 @@ import { CoursePage } from "./pages/public/CoursePage.jsx";
 import { CheckoutPage } from "./pages/public/CheckoutPage.jsx";
 import { CustomerAccountPage } from "./pages/public/CustomerAccountPage.jsx";
 import { CustomerAuthPage } from "./pages/public/CustomerAuthPage.jsx";
+import { CustomerActivationPage } from './pages/public/CustomerActivationPage.jsx';
 import { OrderPage } from "./pages/public/OrderPage.jsx";
 import { AdminPage } from "./pages/admin/AdminPage.jsx";
 import "./styles/global.css";
@@ -75,14 +77,15 @@ export default function App() {
           <Route path="cursos" element={<CoursesPage />} />
           <Route path="cursos/:slug" element={<CoursePage />} />
           <Route path="produto/:slug" element={<ProductPage />} />
-          <Route path="carrinho" element={<CartPage />} />
-          <Route path="checkout" element={<CheckoutPage />} />
-          <Route path="pedido/:code" element={<OrderPage />} />
-          <Route path="login" element={<CustomerAuthPage mode="login" />} />
-          <Route path="cadastro" element={<CustomerAuthPage mode="register" />} />
-          <Route path="recuperar-senha" element={<CustomerAuthPage mode="forgot" />} />
-          <Route path="redefinir-senha" element={<CustomerAuthPage mode="reset" />} />
-          <Route path="minha-conta" element={<CustomerAccountPage />} />
+          <Route path="carrinho" element={<CommerceGate><CartPage /></CommerceGate>} />
+          <Route path="checkout" element={<CommerceGate><CheckoutPage /></CommerceGate>} />
+          <Route path="pedido/:code" element={<CommerceGate><OrderPage /></CommerceGate>} />
+          <Route path="login" element={<CommerceGate><CustomerAuthPage mode="login" /></CommerceGate>} />
+          <Route path="cadastro" element={<CommerceGate><CustomerAuthPage mode="register" /></CommerceGate>} />
+          <Route path="ativar-conta" element={<CommerceGate><CustomerActivationPage /></CommerceGate>} />
+          <Route path="recuperar-senha" element={<CommerceGate><CustomerAuthPage mode="forgot" /></CommerceGate>} />
+          <Route path="redefinir-senha" element={<CommerceGate><CustomerAuthPage mode="reset" /></CommerceGate>} />
+          <Route path="minha-conta" element={<CommerceGate><CustomerAccountPage /></CommerceGate>} />
           <Route path="personalizados" element={<PersonalizadosPage />} />
           <Route path="como-e-feito" element={<ProcessPage />} />
           <Route path="contato" element={<ContactPage />} />

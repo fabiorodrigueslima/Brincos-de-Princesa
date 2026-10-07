@@ -60,6 +60,7 @@ describe("Mercado Pago Checkout Pro provider", () => {
     const event = await createMercadoPagoProvider({
       fetchImpl,
       config,
+      now: () => 1704908010000,
     }).verifyWebhook({
       signature,
       requestId,

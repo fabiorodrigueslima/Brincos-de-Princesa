@@ -1,5 +1,5 @@
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL ?? "http://localhost:3000/api/v1";
+import { resolveApiBase } from './apiBase.js';
+const API_BASE_URL = resolveApiBase(import.meta.env.VITE_API_BASE_URL, import.meta.env.PROD);
 
 export class ApiError extends Error {
   constructor(message, status, code) {
@@ -42,6 +42,9 @@ export function adminLogin(credentials, signal) {
     method: "POST",
     body: credentials,
   });
+}
+export function getStorefront(signal) {
+  return request('/storefront', { signal });
 }
 export function adminMe(signal) {
   return request("/admin/auth/me", { signal });
@@ -108,12 +111,12 @@ export function quoteCheckout(payload, signal) {
   return request("/checkout/quote", { signal, method: "POST", body: payload });
 }
 
-export function createOrder(payload, idempotencyKey, signal) {
+export function createOrder(payload, idempotencyKey, signal, csrfToken) {
   return request("/orders", {
     signal,
     method: "POST",
     body: payload,
-    headers: { "Idempotency-Key": idempotencyKey },
+    headers: { "Idempotency-Key": idempotencyKey, ...(csrfToken ? { "X-CSRF-Token": csrfToken } : {}) },
   });
 }
 
@@ -187,6 +190,12 @@ export function customerReset(credentials, signal) {
 
 export function customerMe(signal) {
   return request("/customers/me", { signal });
+}
+export function customerRequestActivation(credentials, signal) {
+  return request('/customers/auth/activation/request', { signal, method: 'POST', body: credentials });
+}
+export function customerActivate(credentials, signal) {
+  return request('/customers/auth/activation/confirm', { signal, method: 'POST', body: credentials });
 }
 
 export function customerLogout(csrfToken, signal) {
