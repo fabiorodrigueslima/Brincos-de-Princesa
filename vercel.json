@@ -53,6 +53,13 @@
   },
   "rewrites": [
     {
+      "source": "/",
+      "destination": {
+        "service": "frontend",
+        "path": "/index.html"
+      }
+    },
+    {
       "source": "/api/:path*",
       "destination": {
         "service": "backend"
